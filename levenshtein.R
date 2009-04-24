@@ -124,6 +124,19 @@ levenOnetoMany<-function(string,strings,distance=FALSE,subString=FALSE,homoLimit
 	return(dist.mat)
 }
 
+
+levenManytoMany<-function(strings1,strings2,distance=FALSE,subString=FALSE,homoLimit=0,vocal=0){
+	if(length(strings1)!=length(strings2))stop(simpleError('Length of string vectors differ'))
+	if(any(nchar(strings1)!=nchar(strings2))&!subString)warning("String lengths not equal")
+	num<-length(strings1)
+	dist.mat<-rep(NA,num)
+	for(i in 1:num){
+			if(vocal>0&&i%%vocal==0)message('Working on string ',i)
+			dist.mat[i]<-levenAll(strings1[i],strings2[i],distance,subString,homoLimit)	
+	}
+	return(dist.mat)
+}
+
 levenManytoOne<-function(strings,string,distance=FALSE,subString=FALSE,homoLimit=0,vocal=0){
 	if(length(string)>1){warning("Only using first element in string");string<-string[1]}
 	if(all(nchar(string)!=nchar(strings))&!subString)warning("String lengths not equal")
