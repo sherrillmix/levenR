@@ -98,12 +98,12 @@ levenAll <- function(string1, string2,distance=FALSE,subString=FALSE,homoLimit=0
 #	return(ans[[1]][1])
 #}
 
-levenDist<-function(strings,distance=FALSE,vocal=FALSE,subString=FALSE,homoLimit=0,subBoth=FALSE){
+levenDist<-function(strings,distance=FALSE,vocal=0,subString=FALSE,homoLimit=0,subBoth=FALSE){
 	num<-length(strings)
 	if(num<1)stop(simpleError('No strings input to levenDist'))
 	dist.mat<-matrix(NA,ncol=num,nrow=num)
 	for(i in 1:num){
-		if(i%%10==0&vocal)message("Working on string ",i)
+		if(vocal>0&i%%vocal==0)message("Working on string ",i)
 		for(j in i:num){
 			dist.mat[i,j]<-levenAll(strings[i],strings[j],distance=distance,subString=subString,homoLimit=homoLimit,subBoth)			
 			dist.mat[j,i]<-dist.mat[i,j]
@@ -118,7 +118,7 @@ levenOnetoMany<-function(string,strings,distance=FALSE,subString=FALSE,homoLimit
 	num<-length(strings)
 	dist.mat<-rep(NA,num)
 	for(i in 1:num){
-			if(vocal>0&&i%%vocal==0)message('Working on string ',i)
+			if(vocal>0&i%%vocal==0)message('Working on string ',i)
 			dist.mat[i]<-levenAll(string,strings[i],distance,subString,homoLimit,subBoth)	
 	}
 	return(dist.mat)
