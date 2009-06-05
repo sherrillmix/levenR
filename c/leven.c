@@ -4,175 +4,38 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-void leven(int *answer, char **s1, char **s2) {
-	const unsigned int cost_del = 1;
-	const unsigned int cost_ins = 1;
-	const unsigned int cost_sub = 1;
-	unsigned int n1 = strlen(s1[0]);// s1.length();
-	unsigned int n2 = strlen(s2[0]);
-	//printf("%d %d\n",n1,n2);
-	unsigned int* p = malloc(sizeof(unsigned int)*(n2+1));
-	unsigned int* q = malloc(sizeof(unsigned int)*(n2+1));//alloc unsigned int[n2+1];
-	unsigned int* r;
 
-	p[0] = 0;
-	for( unsigned int j = 1; j <= n2; ++j ) p[j] = p[j-1] + cost_ins;
-
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	for( unsigned int i = 1; i <= n1; ++i ){
-			q[0] = p[0] + cost_del;
-			for( unsigned int j = 1; j <= n2; ++j ){
-					unsigned int d_del = p[j] + cost_del;
-					unsigned int d_ins = q[j-1] + cost_ins;
-					//printf("%d %d",i,j);
-					unsigned int d_sub = p[j-1] + ( s1[0][i-1] == s2[0][j-1] ? 0 : cost_sub );
-					//q[j] = min( min( d_del, d_ins ), d_sub );
-					q[j]=d_ins;
-					if (d_del < q[j])q[j]=d_del;
-					if (d_sub < q[j])q[j]=d_sub;	
-			}
-			r = p;
-			p = q;
-			q = r;
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	}
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	*answer = p[n2];
-	free(p);
-	free(q);
-}
-
-void levenSub(int *answer, char **s1, char **s2) {
-	const unsigned int cost_del = 1;
-	const unsigned int cost_ins = 1;
-	const unsigned int cost_sub = 1;
-	unsigned int n1 = strlen(s1[0]);// s1.length();
-	unsigned int n2 = strlen(s2[0]);
-	//printf("%d %d\n",n1,n2);
-	unsigned int* p = malloc(sizeof(unsigned int)*(n2+1));
-	unsigned int* q = malloc(sizeof(unsigned int)*(n2+1));//alloc unsigned int[n2+1];
-	unsigned int* r;
-	unsigned int min;
-
-	p[0] = 0;
-	for( unsigned int j = 1; j <= n2; ++j ) p[j] = 0;
-
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	for( unsigned int i = 1; i <= n1; ++i ){
-			q[0] = p[0] + cost_del;
-			for( unsigned int j = 1; j <= n2; ++j ){
-					unsigned int d_del = p[j] + cost_del;
-					unsigned int d_ins = q[j-1] + cost_ins;
-					//printf("%d %d",i,j);
-					unsigned int d_sub = p[j-1] + ( s1[0][i-1] == s2[0][j-1] ? 0 : cost_sub );
-					//q[j] = min( min( d_del, d_ins ), d_sub );
-					q[j]=d_ins;
-					if (d_del < q[j])q[j]=d_del;
-					if (d_sub < q[j])q[j]=d_sub;	
-			}
-			r = p;
-			p = q;
-			q = r;
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	}
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	min=p[0];
-	for( unsigned int j = 1; j <= n2; ++j ){
-		if(p[j]<min)min=p[j];
-	}
-	*answer = min;
-	free(p);
-	free(q);
-}
-
-void levenHomo(int *answer, char **s1, char **s2, int *homoLimit) {
+void levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit, int *debug) {
 	unsigned int cost_del = 1;
 	unsigned int cost_ins = 1;
 	const unsigned int cost_sub = 1;
 	unsigned int n1 = strlen(s1[0]);// s1.length();
 	unsigned int n2 = strlen(s2[0]);
 	//printf("%d %d\n",n1,n2);
-	unsigned int* p = malloc(sizeof(unsigned int)*(n2+1));
-	unsigned int* q = malloc(sizeof(unsigned int)*(n2+1));//alloc unsigned int[n2+1];
-	unsigned int* r;
+	unsigned int* lastRow = malloc(sizeof(unsigned int)*(n2+1));
+	unsigned int* thisRow = malloc(sizeof(unsigned int)*(n2+1));//alloc unsigned int[n2+1];
+	unsigned int* cost_dels = malloc(sizeof(unsigned int)*(n1));
+	unsigned int* cost_inss = malloc(sizeof(unsigned int)*(n2));
+	unsigned int* tmpRow;
+	unsigned int min;
 
-	p[0] = 0;
-	for( unsigned int j = 1; j <= n2; ++j ) p[j] = p[j-1] + cost_ins;
-
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	for( unsigned int i = 1; i <= n1; ++i ){
+	if(*homoLimit){
+		for(unsigned int i = 0; i < n1; i++){
 			cost_del=0;
-			if(i>*homoLimit){
-				for(unsigned int step = 1; step <= *homoLimit+1; step++){
+			if(i>=*homoLimit){
+				for(unsigned int step = 1; step <= *homoLimit; step++){
+					//printf("|%c %c|",s1[0][i-1],s1[0][i-1-step]);
 					if(s1[0][i]!=s1[0][i-step]){
 						cost_del = 1;
-						break;	
+						break;
 					}
 				}
 			}else cost_del=1;
-			q[0] = p[0] + cost_del;
-			for( unsigned int j = 1; j <= n2; ++j ){
-				cost_ins=0;
-				if(j>*homoLimit){
-					for(unsigned int step = 1; step <= *homoLimit; step++){
-						if(s2[0][j]!=s2[0][j-step]){
-							cost_ins = 1;
-							break;	
-						}
-					}
-				}else cost_ins=1;
-				unsigned int d_del = p[j] + cost_del;
-				unsigned int d_ins = q[j-1] + cost_ins;
-				//printf("%d %d",i,j);
-				unsigned int d_sub = p[j-1] + ( s1[0][i-1] == s2[0][j-1] ? 0 : cost_sub );
-				//q[j] = min( min( d_del, d_ins ), d_sub );
-				q[j]=d_ins;
-				if (d_del < q[j])q[j]=d_del;
-				if (d_sub < q[j])q[j]=d_sub;	
-			}
-			r = p;
-			p = q;
-			q = r;
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	}
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	*answer = p[n2];
-	free(p);
-	free(q);
-}
-
-void levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit) {
-	unsigned int cost_del = 1;
-	unsigned int cost_ins = 1;
-	const unsigned int cost_sub = 1;
-	unsigned int n1 = strlen(s1[0]);// s1.length();
-	unsigned int n2 = strlen(s2[0]);
-	//printf("%d %d\n",n1,n2);
-	unsigned int* p = malloc(sizeof(unsigned int)*(n2+1));
-	unsigned int* q = malloc(sizeof(unsigned int)*(n2+1));//alloc unsigned int[n2+1];
-	unsigned int* r;
-	unsigned int min;
-
-	p[0] = 0;
-	if(*subString) for( unsigned int j = 1; j <= n2; ++j ) p[j] = 0;
-	else for( unsigned int j = 1; j <= n2; ++j ) p[j] = p[j-1] + cost_ins;
-	
-
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	for( unsigned int i = 1; i <= n1; ++i ){
-		cost_del=0;
-		if(*homoLimit&&i>*homoLimit){
-			for(unsigned int step = 1; step <= *homoLimit+1; step++){
-				if(s1[0][i]!=s1[0][i-step]){
-					cost_del = 1;
-					break;	
-				}
-			}
-		}else cost_del=1;
-		q[0] = p[0] + cost_del;
-		for( unsigned int j = 1; j <= n2; ++j ){
+			cost_dels[i]=cost_del;
+		}
+		for(unsigned int j = 0; j < n2; j++){
 			cost_ins=0;
-			if(*homoLimit&&j>*homoLimit){
+			if(j>=*homoLimit){
 				for(unsigned int step = 1; step <= *homoLimit; step++){
 					if(s2[0][j]!=s2[0][j-step]){
 						cost_ins = 1;
@@ -180,36 +43,57 @@ void levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit) 
 					}
 				}
 			}else cost_ins=1;
-			unsigned int d_del = p[j] + cost_del;
-			unsigned int d_ins = q[j-1] + cost_ins;
-			//printf("%d %d",i,j);
-			unsigned int d_sub = p[j-1] + ( s1[0][i-1] == s2[0][j-1] ? 0 : cost_sub );
-			//q[j] = min( min( d_del, d_ins ), d_sub );
-			q[j]=d_ins;
-			if (d_del < q[j])q[j]=d_del;
-			if (d_sub < q[j])q[j]=d_sub;	
+			cost_inss[j]=cost_ins;
 		}
-		r = p;
-		p = q;
-		q = r;
-//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
+	}else{
+		for(unsigned int i = 0; i < n1; i++) cost_dels[i]=1;
+		for(unsigned int j = 0; j < n2; j++) cost_inss[j]=1;
 	}
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",p[i]);
+
+	lastRow[0] = 0;
+	if(*subString) for(unsigned int j = 1; j <= n2; j++) lastRow[j] = 0;
+	else for(unsigned int j = 1; j <= n2; j++) lastRow[j] = lastRow[j-1] + cost_inss[j-1];
+	
+
+	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
+	for(unsigned int i = 1; i <= n1; i++){
+		cost_del=cost_dels[i-1];
+		thisRow[0] = lastRow[0] + cost_del;
+		for(unsigned int j = 1; j <= n2; j++){
+			//printf("S1[%d]:%c S2[%d]:%c\n",i-1,s1[0][i-1],j-1,s2[0][j-1]);
+			cost_ins=cost_inss[j-1];
+			unsigned int d_del = lastRow[j] + cost_del;
+			unsigned int d_ins = thisRow[j-1] + cost_ins;
+			//printf("%d %d",i,j);
+			unsigned int d_sub = lastRow[j-1] + ( s1[0][i-1] == s2[0][j-1] ? 0 : cost_sub );
+			thisRow[j]=d_ins;
+			if (d_del < thisRow[j])thisRow[j]=d_del;
+			if (d_sub < thisRow[j])thisRow[j]=d_sub;	
+		}
+		//Switch the pointers around
+		tmpRow = lastRow;
+		lastRow = thisRow;
+		thisRow = tmpRow;
+		if(*debug){for(int printer = 0; printer <=n2; ++printer) printf("%d ",thisRow[printer]); printf("\n");}
+	}
+	if(*debug){for(int printer = 0; printer <=n2; ++printer) printf("%d ",lastRow[printer]); printf("\n");}
 	if(*subString){
-		min=p[0];
-		for( unsigned int j = 1; j <= n2; ++j ){
-			if(p[j]<min)min=p[j];
+		min=lastRow[0];
+		for( unsigned int j = 0; j <= n2; ++j ){
+			if(lastRow[j]<min)min=lastRow[j];
 		}
 		*answer = min;
-	}else *answer = p[n2];
+	}else *answer = lastRow[n2];
 	//printf(" %d ",*answer);
-	free(p);
-	free(q);
+	free(lastRow);
+	free(thisRow);
+	free(cost_dels);
+	free(cost_inss);
 	
 }
 
 
-
+/*
 void levenMany(int *answer, char **strings, int *subString, int *homoLimit, int *numberStrings) {
 //loop through strings comparing each to each don't overlap
 //pass in answer num*num but fill 2 on each
@@ -231,15 +115,7 @@ void levenMany(int *answer, char **strings, int *subString, int *homoLimit, int 
 		}
 	}
 }
-
-void levenOneToMany(int *answer, char **string, char **strings, int *subString, int *homoLimit, int *numberStrings) {
-//loop through strings comparing each to each don't overlap
-//pass in answer num*num but fill 2 on each
-//levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit) {
-	for(unsigned int i=0;i<*numberStrings;i++){
-	
-	}
-}
+*/
 
 #define SWAP_CHAR( x, y ) {char c; c = x; x = y; y = c;}
 void reverse(char t[])
@@ -254,6 +130,7 @@ void reverse(char t[])
 #define DEL_ID 2
 #define MATCH_ID 4
 
+//still working
 void levenAlign(int *answer, char **align, char **s1, char **s2,int *subString, int *homoLimit, int *gapLimit,int *debug) {
 	unsigned int cost_del = 1;
 	unsigned int cost_ins = 1;
