@@ -5,13 +5,14 @@
 #include <stdio.h>
 #include <string.h>
 
-void levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit, int *debug) {
+void levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit, int *prepend, int *append, int *debug) {
 	unsigned int cost_del = 1;
 	unsigned int cost_ins = 1;
 	const unsigned int cost_sub = 1;
 	unsigned int n1 = strlen(s1[0]);// s1.length();
 	unsigned int n2 = strlen(s2[0]);
 	//printf("%d %d\n",n1,n2);
+	unsigned int* endCol = malloc(sizeof(unsigned int)*(n1+1));
 	unsigned int* lastRow = malloc(sizeof(unsigned int)*(n2+1));
 	unsigned int* thisRow = malloc(sizeof(unsigned int)*(n2+1));//alloc unsigned int[n2+1];
 	unsigned int* cost_dels = malloc(sizeof(unsigned int)*(n1));
@@ -51,14 +52,18 @@ void levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit, 
 	}
 
 	lastRow[0] = 0;
-	if(*subString) for(unsigned int j = 1; j <= n2; j++) lastRow[j] = 0;
+	//set first row to 0s if append ok on first string
+	if(prepend[1]) for(unsigned int j = 1; j <= n2; j++) lastRow[j] = 0;
 	else for(unsigned int j = 1; j <= n2; j++) lastRow[j] = lastRow[j-1] + cost_inss[j-1];
 	
+	endCol[0]=lastRow[n2];
 
 	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
 	for(unsigned int i = 1; i <= n1; i++){
 		cost_del=cost_dels[i-1];
-		thisRow[0] = lastRow[0] + cost_del;
+		//Set first column to 0s if prepend ok on first string
+		if(prepend[0]) thisRow[0] = lastRow[0];
+		else thisRow[0] = lastRow[0] + cost_del;
 		for(unsigned int j = 1; j <= n2; j++){
 			//printf("S1[%d]:%c S2[%d]:%c\n",i-1,s1[0][i-1],j-1,s2[0][j-1]);
 			cost_ins=cost_inss[j-1];
@@ -70,6 +75,8 @@ void levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit, 
 			if (d_del < thisRow[j])thisRow[j]=d_del;
 			if (d_sub < thisRow[j])thisRow[j]=d_sub;	
 		}
+		//keep track of the final column for substringing
+		endCol[i]=thisRow[n2];
 		//Switch the pointers around
 		tmpRow = lastRow;
 		lastRow = thisRow;
@@ -77,14 +84,22 @@ void levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit, 
 		if(*debug){for(int printer = 0; printer <=n2; ++printer) printf("%d ",thisRow[printer]); printf("\n");}
 	}
 	if(*debug){for(int printer = 0; printer <=n2; ++printer) printf("%d ",lastRow[printer]); printf("\n");}
-	if(*subString){
-		min=lastRow[0];
+	*answer = lastRow[n2];
+	if(append[1]){
+		min=*answer;
 		for( unsigned int j = 0; j <= n2; ++j ){
 			if(lastRow[j]<min)min=lastRow[j];
 		}
 		*answer = min;
-	}else *answer = lastRow[n2];
+	}
+	if(append[0]){
+		min=*answer;
+		for( unsigned int i = 0; i <= n1; ++i ){
+			if(endCol[i]<min)min=endCol[i];
+		}
+	}
 	//printf(" %d ",*answer);
+	free(endCol);
 	free(lastRow);
 	free(thisRow);
 	free(cost_dels);
