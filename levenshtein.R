@@ -1,6 +1,6 @@
 ##File Name: levenshtein.R
 ##Creation Date: Jan 01, 2009
-##Last Modified: Tue 09 Jun 2009 08:15:24 PM EDT
+##Last Modified: Wed 10 Jun 2009 05:03:31 PM EDT
 ##Created By: scott
 ##Summary: Functions to calculate levenshtein distance between strings (uses C code from c/leven.c)
 
@@ -15,7 +15,6 @@ levenAll <- function(string1, string2,distance=FALSE,homoLimit=0,debug=FALSE,pre
 	if(length(append)!=2&length(prepend!=2))stop(simpleError('Specify prepend and append as a vector of two logicals'))
 	if(any(!is.logical(c(prepend,append))))stop(simpleError('Specify prepend and append as a vector of two logicals'))
 	if(any(prepend & rev(append))){
-		message("running twice")
 		runs<-list(c(prepend[1],FALSE,append[1],FALSE),c(FALSE,prepend[2],FALSE,append[2]))
 	}else runs<-list(c(prepend,append))
 
@@ -25,7 +24,7 @@ levenAll <- function(string1, string2,distance=FALSE,homoLimit=0,debug=FALSE,pre
 	n2<-nchar(string2)
 	if(is.na(string1)|is.na(string2))stop(simpleError('NULL or NA string in levenAll'))
 	####WORK HERE, CHECK APPEND PREPEND IF 1|1 2|2 |1 |2 1| 2| 1,2| |1,2 THEN RUN ONCE 1,2|1,2 1|2 2|1 1,2|1 1,2|2 1|1,2 2|1,2 RUN TWICE
-	ans<-sapply(runs,function(x).C('levenAll',as.integer(1),as.character(string1),as.character(string2),as.integer(subString),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug))[[1]][1])
+	ans<-sapply(runs,function(x).C('levenAll',as.integer(1),as.character(string1),as.character(string2),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug))[[1]][1])
 	#FIX UP DISTANCE CALCULATION
 #	if(distance)ans[[1]]
 #		ans2<-.C('levenAll',as.integer(1),as.character(string2),as.character(string1),as.integer(subString),as.integer(homoLimit),as.integer(prepend),as.integer(append),as.integer(debug))
@@ -64,18 +63,15 @@ levenStringsToStrings<-function(strings1,strings2=NULL,oneToOne=FALSE,distance=F
 		if(nStrings1!=nStrings2)stop(simpleError('Length of strings1 and strings2 not equal for 1 to 1 dists'))
 		nStrings2<-1
 	}
-	if(substring1){append<-unique(c(append,1));prepend<-unique(c(prepend,1))}
-	if(substring2){append<-unique(c(append,2));prepend<-unique(c(prepend,2))}
+	if(substring1){append<-c(append,1);prepend<-c(prepend,1)}
+	if(substring2){append<-c(append,2);prepend<-c(prepend,2)}
 	append<-1:2 %in% append
 	prepend<-1:2 %in% prepend
-	vocal1<-vocal2<-0
-	if(nStrings1>nStrings2) vocal1<-vocal else vocal2<-vocal
 	dist.mat<-matrix(NA,nrow=nStrings1,ncol=nStrings2)
 	#doesn't seem to be any speed benefit to using lapply or doing the looping in C (strange)
 	for(i in 1:ifelse(nStrings1>1,nStrings1,1)){
-		if(vocal1>0&i%%vocal1==0)message("Working on string ",i)
+		if(vocal>0&i%%vocal==0)message("Working on string ",i)
 		for(j in ifelse(multiToMulti,i,1):nStrings2){
-			if(vocal2>0&i%%vocal2==0)message("Working on string ",i)
 			dist.mat[i,j]<-levenAll(strings1[i],strings2[ifelse(oneToOne,i,j)],distance=distance,homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)
 			if(multiToMulti)dist.mat[j,i]<-dist.mat[i,j]
 		}

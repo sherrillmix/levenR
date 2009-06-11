@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-void levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit, int *prepend, int *append, int *debug) {
+void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, int *append, int *debug) {
 	unsigned int cost_del = 1;
 	unsigned int cost_ins = 1;
 	const unsigned int cost_sub = 1;
@@ -94,9 +94,12 @@ void levenAll(int *answer, char **s1, char **s2,int *subString, int *homoLimit, 
 	}
 	if(append[0]){
 		min=*answer;
+		if(*debug)printf("Last column: ");
 		for( unsigned int i = 0; i <= n1; ++i ){
+			if(*debug)printf(" %d ",endCol[i]);
 			if(endCol[i]<min)min=endCol[i];
 		}
+		*answer = min;
 	}
 	//printf(" %d ",*answer);
 	free(endCol);
