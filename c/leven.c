@@ -1,9 +1,31 @@
+//R CMD SHLIB leven.c
 //#include <string>
 //#include <algorithm>
 //#include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+int countMismatch(char *s1, char *s2, int length, int s2Offset, int cutoff) {
+	int answer=0;
+	for(unsigned int i = 0; i < length; i++){
+		if(s1[i]!=s2[i+s2Offset]) answer++;
+		if(answer >= cutoff)return(answer);
+	}
+	return(answer);
+}
+
+void bestMismatch(int *ans, char **s1, char **s2){
+	unsigned int s1Length=strlen(s1[0]);
+	unsigned int s2Length=strlen(s2[0]);
+	unsigned int lastPos=s2Length-s1Length;
+	int tmp;
+	*ans=s1Length;
+	for(int i = 0; i <= lastPos; i++){
+		tmp=countMismatch(s1[0],s2[0],s1Length,i,*ans);
+		if(tmp < *ans)*ans=tmp;
+	}
+}
 
 void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, int *append, int *debug) {
 	unsigned int cost_del = 1;
