@@ -10,10 +10,12 @@ loader<-try(dyn.load(levenSO),TRUE)
 
 if(any(grep("Error",loader))) stop(simpleError('Error loading levenshtein c functions'))
 
-bestMismatch <- function(pattern, subject){
+bestMismatch <- function(pattern, subject, pos=FALSE){
 	if(nchar(pattern)>nchar(subject))stop(simpleError('Pattern longer than subject'))
-	ans<-.C('bestMismatch',as.integer(1),as.character(pattern),as.character(subject))
-	return(ans[[1]][1])
+	ans<-.C('bestMismatch',as.integer(c(-1,-1)),as.character(pattern),as.character(subject))[[1]]
+	if(any(ans<0))stop(simpleError('Something did not work in mismatch'))
+	if(pos)return(ans)
+	else return(ans[[1]][1])
 }
 
 levenAll <- function(string1, string2,distance=FALSE,homoLimit=0,debug=FALSE,prepend=NULL,append=NULL) {

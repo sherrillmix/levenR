@@ -20,10 +20,13 @@ void bestMismatch(int *ans, char **s1, char **s2){
 	unsigned int s2Length=strlen(s2[0]);
 	unsigned int lastPos=s2Length-s1Length;
 	int tmp;
-	*ans=s1Length;
+	ans[0]=s1Length+1;
 	for(int i = 0; i <= lastPos; i++){
-		tmp=countMismatch(s1[0],s2[0],s1Length,i,*ans);
-		if(tmp < *ans)*ans=tmp;
+		tmp=countMismatch(s1[0],s2[0],s1Length,i,ans[0]);
+		if(tmp < ans[0]){
+			ans[0]=tmp;
+			ans[1]=i+1;
+		}
 	}
 }
 
