@@ -6,23 +6,24 @@
 #include <stdio.h>
 #include <string.h>
 
-int countMismatch(char *s1, char *s2, int length, int s2Offset, int cutoff) {
+int countMismatch(char *s1, char *s2, int length, int s2Offset, int cutoff, int *weights) {
 	int answer=0;
 	for(unsigned int i = 0; i < length; i++){
-		if(s1[i]!=s2[i+s2Offset]) answer++;
+		if(s1[i]!=s2[i+s2Offset]) answer+=weights[i];
 		if(answer >= cutoff)return(answer);
 	}
 	return(answer);
 }
 
-void bestMismatch(int *ans, char **s1, char **s2){
+void bestMismatch(int *ans, char **s1, char **s2, int *weights){
 	unsigned int s1Length=strlen(s1[0]);
 	unsigned int s2Length=strlen(s2[0]);
 	unsigned int lastPos=s2Length-s1Length;
 	int tmp;
-	ans[0]=s1Length+1;
+	//INT_MAX doesn't appear to be defined
+	ans[0]=99999;
 	for(int i = 0; i <= lastPos; i++){
-		tmp=countMismatch(s1[0],s2[0],s1Length,i,ans[0]);
+		tmp=countMismatch(s1[0],s2[0],s1Length,i,ans[0],weights);
 		if(tmp < ans[0]){
 			ans[0]=tmp;
 			ans[1]=i+1;

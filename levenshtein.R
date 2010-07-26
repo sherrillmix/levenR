@@ -10,9 +10,18 @@ loader<-try(dyn.load(levenSO),TRUE)
 
 if(any(grep("Error",loader))) stop(simpleError('Error loading levenshtein c functions'))
 
-bestMismatch <- function(pattern, subject, pos=FALSE){
+
+multiMismatch<-function(patterns, subject,...){
+	matches<-do.call(rbind,lapply(patterns,function(x)bestMismatch(x,subject,TRUE,...)))
+	matches<-cbind(matches,1:nrow(matches))
+	colnames(matches)<-c('mismatch','pos','number')
+	return(matches[matches[,1]==min(matches[,1]),,drop=FALSE][1,])
+}
+
+bestMismatch <- function(pattern, subject, pos=FALSE, weights=rep(1,nchar(pattern))){
 	if(nchar(pattern)>nchar(subject))stop(simpleError('Pattern longer than subject'))
-	ans<-.C('bestMismatch',as.integer(c(-1,-1)),as.character(pattern),as.character(subject))[[1]]
+	if(nchar(pattern)!=length(weights))stop(simpleError('Weights and pattern length do not match'))
+	ans<-.C('bestMismatch',as.integer(c(-1,-1)),as.character(pattern),as.character(subject),as.integer(weights))[[1]]
 	if(any(ans<0))stop(simpleError('Something did not work in mismatch'))
 	if(pos)return(ans)
 	else return(ans[[1]][1])
