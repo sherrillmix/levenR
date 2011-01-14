@@ -11,20 +11,36 @@ loader<-try(dyn.load(levenSO),TRUE)
 if(any(grep("Error",loader))) stop(simpleError('Error loading levenshtein c functions'))
 
 
-multiMismatch<-function(patterns, subject,...){
-	matches<-do.call(rbind,lapply(patterns,function(x)bestMismatch(x,subject,TRUE,...)))
-	matches<-cbind(matches,1:nrow(matches))
+multiMismatch<-function(patterns, subject,drop=TRUE,...){
+	matches<-do.call(rbind,mapply(function(x,y){matches<-bestMismatch(x,subject,TRUE,...);ifelse(is.null(dim(matches)),list(c(matches,y)),list(cbind(matches,y)))[[1]]},patterns,1:length(patterns),SIMPLIFY=FALSE))
 	colnames(matches)<-c('mismatch','pos','number')
-	return(matches[matches[,1]==min(matches[,1]),,drop=FALSE][1,])
+	rownames(matches)<-NULL
+	if(drop) return(matches[matches[,1]==min(matches[,1]),,drop=FALSE][1,])
+	else return(matches)
 }
 
-bestMismatch <- function(pattern, subject, pos=FALSE, weights=rep(1,nchar(pattern))){
+mismatchTable<-function(patterns,subjects,...){
+	out<-do.call(rbind,lapply(patterns,function(x)sapply(subjects,function(y)bestMismatch(x,y,FALSE,...),USE.NAMES=FALSE)))
+	return(out)
+}
+bestMismatch <- function(pattern, subject, pos=findAll, weights=rep(1,nchar(pattern)),findAll=FALSE,dummyChar='|'){
 	if(nchar(pattern)>nchar(subject))stop(simpleError('Pattern longer than subject'))
 	if(nchar(pattern)!=length(weights))stop(simpleError('Weights and pattern length do not match'))
 	ans<-.C('bestMismatch',as.integer(c(-1,-1)),as.character(pattern),as.character(subject),as.integer(weights))[[1]]
 	if(any(ans<0))stop(simpleError('Something did not work in mismatch'))
-	if(pos)return(ans)
-	else return(ans[[1]][1])
+	stillLooking<-TRUE;nextMatch<-out<-ans
+	if(findAll){
+		while(stillLooking&findAll){
+			substring(subject,nextMatch[2],nextMatch[2]+nchar(pattern)-1)<-paste(rep(dummyChar,nchar(pattern)),collapse='')
+			nextMatch=bestMismatch(pattern,subject,TRUE,weights)
+			if(nextMatch[1]==ans[1])out<-rbind(out,nextMatch)
+			else stillLooking<-FALSE
+		}
+		return(out)
+	}else{
+		if(pos)return(ans)
+		else return(ans[[1]][1])
+	}
 }
 
 levenAll <- function(string1, string2,distance=FALSE,homoLimit=0,debug=FALSE,prepend=NULL,append=NULL) {
@@ -88,8 +104,9 @@ levenStringsToStrings<-function(strings1,strings2=NULL,oneToOne=FALSE,distance=F
 	dist.mat<-matrix(NA,nrow=nStrings1,ncol=nStrings2)
 	#doesn't seem to be any speed benefit to using lapply or doing the looping in C (strange)
 	for(i in 1:ifelse(nStrings1>1,nStrings1,1)){
-		if(vocal>0&i%%vocal==0)message("Working on string ",i)
+		if(vocal[1]>0&i%%vocal[1]==0)message("Working on string ",i)
 		for(j in ifelse(multiToMulti,i,1):nStrings2){
+			if(!is.na(vocal[2])&j%%vocal[2]==0)message("Working on string ",i,' - ',j)
 			dist.mat[i,j]<-levenAll(strings1[i],strings2[ifelse(oneToOne,i,j)],distance=distance,homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)
 			if(multiToMulti)dist.mat[j,i]<-dist.mat[i,j]
 		}
