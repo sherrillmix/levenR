@@ -1,0 +1,9 @@
+Package: leven
+Maintainer: Scott Sherrill-Mix <R@sherrillmix.com>
+License: CC BY-NC 3.0
+Title: Simple Levenshtein alignment and distance calculation
+Type: Package
+LazyLoad: yes
+Author: Scott Sherrill-Mix
+Description: Simple Levenshtein alignment and distance calculation with ends-free and reduced homopolymer gap costs
+Version: 0.1
