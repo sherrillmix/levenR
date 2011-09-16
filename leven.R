@@ -72,6 +72,33 @@ bestMismatch <- function(pattern, subject, pos=findAll, weights=rep(1,nchar(patt
 	}
 }
 
+#' Combine gapped alignments
+#'
+#' Combine several pairs of reference, query alignments
+#'
+#' @param refs The gapped reference sequences (one for each query)
+#' @param aligns The gapped query sequences
+#' @return A vector of the aligned strings with gaps added
+#' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
+combineAligns<-function(refs,aligns){
+	out<-rep('',length(aligns)+1)
+	#rather inefficient
+	while(any(nchar(refs)>0)){
+		selector<-substring(refs,1,1)=='-'
+		if(any(selector)){
+			out[!selector]<-sprintf('%s%s',out[!selector],'-')
+			refs[selector]<-substring(refs[selector],2)
+			out[selector]<-sprintf('%s%s',out[selector],substring(aligns[selector],1,1))
+			aligns[selector]<-substring(aligns[selector],2)
+		}else{
+			out<-sprintf('%s%s',out,substring(aligns,1,1))
+			refs<-substring(refs,2)
+			aligns<-substring(aligns,2)
+		}
+	}
+	return(out)
+}
+
 
 #' Align many strings to a reference
 #'
@@ -96,21 +123,7 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 	aligns<-lapply(strings,function(x)levenAll(x,ref,homoLimit=homoLimit,prepend=prepend,append=append,align=TRUE)[[2]])
 	refs<-c(ref,sapply(aligns,'[[',2))
 	aligns<-c(ref,sapply(aligns,'[[',1))
-	out<-rep('',length(strings)+1)
-	#rather inefficient
-	while(any(nchar(refs)>0)){
-		selector<-substring(refs,1,1)=='-'
-		if(any(selector)){
-			out[!selector]<-sprintf('%s%s',out[!selector],'-')
-			refs[selector]<-substring(refs[selector],2)
-			out[selector]<-sprintf('%s%s',out[selector],substring(aligns[selector],1,1))
-			aligns[selector]<-substring(aligns[selector],2)
-		}else{
-			out<-sprintf('%s%s',out,substring(aligns,1,1))
-			refs<-substring(refs,2)
-			aligns<-substring(aligns,2)
-		}
-	}
+	out<-combineAligns(refs,aligns)
 	#refGaps<-lapply(gregexpr('-',refs,fixed=TRUE),function(x)x[x!=-1])
 	#uniqueGaps<-sort(unique(unlist(refGaps)))
 	#finalOut<-vector('list',length(strings)+1)
