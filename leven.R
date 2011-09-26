@@ -81,7 +81,7 @@ bestMismatch <- function(pattern, subject, pos=findAll, weights=rep(1,nchar(patt
 #' @return A vector of the aligned strings with gaps added
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 combineAligns<-function(refs,aligns){
-	out<-rep('',length(aligns)+1)
+	out<-rep('',length(aligns))
 	#rather inefficient
 	while(any(nchar(refs)>0)){
 		selector<-substring(refs,1,1)=='-'
