@@ -200,10 +200,17 @@ levenAll <- function(string1, string2,distance=FALSE,homoLimit=0,debug=FALSE,pre
 #' @param append 1 or 2 for ends-free on back of string 1 or 2
 #' @param substring1 ends-free for strings1
 #' @param substring2 ends-free for strings2
+#' @param parallel Run using mclapply? This requires package parallel and does not work with oneToOne=TRUE.
 #' @return Levenshtein distance matrix
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
-leven<-function(strings1,strings2=NULL,oneToOne=FALSE,distance=FALSE,homoLimit=0,vocal=0,debug=FALSE,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE){
+leven<-function(strings1,strings2=NULL,oneToOne=FALSE,distance=FALSE,homoLimit=0,vocal=0,debug=FALSE,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,parallel=FALSE){
+	if(parallel&!oneToOne){
+		library(parallel)
+		loopFunc<-mclapply
+	}else{
+		loopFunc<-lapply
+	}
 	if(any(!prepend %in% 1:2)|any(!append %in% 1:2))stop(simpleError('Specify prepend and append with 1 or 2'))
 	multiToMulti<-FALSE
 	if(is.null(strings2)){
@@ -220,17 +227,21 @@ leven<-function(strings1,strings2=NULL,oneToOne=FALSE,distance=FALSE,homoLimit=0
 	if(substring2){append<-c(append,2);prepend<-c(prepend,2)}
 	append<-1:2 %in% append
 	prepend<-1:2 %in% prepend
-	dist.mat<-matrix(NA,nrow=nStrings1,ncol=nStrings2)
+	if(any(c(prepend,append)))multiToMulti<-FALSE #ABC in C, different than C in ABC with ends free
+	distMat<-matrix(NA,nrow=nStrings1,ncol=nStrings2)
 	#doesn't seem to be any speed benefit to using lapply or doing the looping in C (strange)
 	for(i in 1:ifelse(nStrings1>1,nStrings1,1)){
 		if(vocal[1]>0&i%%vocal[1]==0)message("Working on string ",i)
-		for(j in ifelse(multiToMulti,i,1):nStrings2){
-			if(!is.na(vocal[2])&j%%vocal[2]==0)message("Working on string ",i,' - ',j)
-			dist.mat[i,j]<-levenAll(strings1[i],strings2[ifelse(oneToOne,i,j)],distance=distance,homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)
-			if(multiToMulti)dist.mat[j,i]<-dist.mat[i,j]
-		}
+		indices<-ifelse(multiToMulti,i,1):nStrings2
+		distMat[i,indices]<-unlist(loopFunc(strings2[indices],function(x)levenAll(strings1[i],x,distance=distance,homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)))
+		if(multiToMulti)distMat[indices,i]<-distMat[i,indices]
+		#for(j in ifelse(multiToMulti,i,1):nStrings2){
+			#if(!is.na(vocal[2])&j%%vocal[2]==0)message("Working on string ",i,' - ',j)
+			#dist.mat[i,j]<-levenAll(strings1[i],strings2[ifelse(oneToOne,i,j)],distance=distance,homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)
+			#if(multiToMulti)dist.mat[j,i]<-dist.mat[i,j]
+		#}
 	}
-	return(dist.mat[,])
+	return(distMat)
 }
 
 
