@@ -4,11 +4,11 @@
 ##Created By: scott
 ##Summary: Functions to calculate levenshtein distance between strings (uses C code from c/leven.c)
 
-#levenSO<-'~/scripts/R/c/leven.so'
-#loader<-try(dyn.load(levenSO),TRUE)
+levenSO<-'~/scripts/R/c/leven.so'
+loader<-try(dyn.load(levenSO),TRUE)
 
 
-#if(any(grep("Error",loader))) stop(simpleError('Error loading levenshtein c functions'))
+if(any(grep("Error",loader))) stop(simpleError('Error loading levenshtein c functions'))
 
 
 multiMismatch<-function(patterns, subject,drop=TRUE,...){
