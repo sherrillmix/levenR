@@ -206,7 +206,7 @@ levenAll <- function(string1, string2,distance=FALSE,homoLimit=0,debug=FALSE,pre
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 leven<-function(strings1,strings2=NULL,oneToOne=FALSE,distance=FALSE,homoLimit=0,vocal=0,debug=FALSE,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,parallel=FALSE){
 	if(parallel&!oneToOne){
-		library(parallel)
+		if(!suppressWarnings(require('parallel')))library('multicore')
 		loopFunc<-mclapply
 	}else{
 		loopFunc<-lapply
