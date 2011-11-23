@@ -4,7 +4,7 @@
 #' Package: \tab leven\cr
 #' Type: \tab Package\cr
 #' Version: \tab 0.1\cr
-#' Date: \tab 2011-09-16\cr
+#' Date: \tab 2011-11-16\cr
 #' License: \tab CC BY-NC 3.0\cr
 #' LazyLoad: \tab yes\cr
 #' }
@@ -32,6 +32,7 @@ NULL
 #' @param drop If TRUE return only return the first best match
 #' @return Three column matrix with columns minMismatch, position, pattern number 
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
+#" @export
 multiMismatch<-function(patterns, subject,drop=TRUE,...){
 	matches<-do.call(rbind,mapply(function(x,y){matches<-bestMismatch(x,subject,TRUE,...);ifelse(is.null(dim(matches)),list(c(matches,y)),list(cbind(matches,y)))[[1]]},patterns,1:length(patterns),SIMPLIFY=FALSE))
 	colnames(matches)<-c('mismatch','pos','number')
@@ -52,6 +53,7 @@ multiMismatch<-function(patterns, subject,drop=TRUE,...){
 #' @param dummyChar A character that does not appear in either string (only necessary if findAll==TRUE [and could probably program better])
 #' @return Single value giving the least mismatch if pos=FALSE, c(minMismatches,position) if pos=TRUE, if findAll==TRUE matrix with columns minMismatches, position and rows for each occurrence
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
+#" @export
 bestMismatch <- function(pattern, subject, pos=findAll, weights=rep(1,nchar(pattern)),findAll=FALSE,dummyChar='|'){
 	if(nchar(pattern)>nchar(subject))stop(simpleError('Pattern longer than subject'))
 	if(nchar(pattern)!=length(weights))stop(simpleError('Weights and pattern length do not match'))
@@ -80,6 +82,7 @@ bestMismatch <- function(pattern, subject, pos=findAll, weights=rep(1,nchar(patt
 #' @param aligns The gapped query sequences
 #' @return A vector of the aligned strings with gaps added
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
+#" @export
 combineAligns<-function(refs,aligns){
 	out<-rep('',length(aligns))
 	#rather inefficient
@@ -114,6 +117,7 @@ combineAligns<-function(refs,aligns){
 #' @return A list with first entry for the gapped reference and second entry all the aligned strings
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
+#" @export
 levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE){
 	if(length(ref)>1)stop(simpleError('Only a single reference supported'))
 	if(substring1){append<-c(append,1);prepend<-c(prepend,1)}
@@ -148,6 +152,7 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 #' @return Either a distance or if align==TRUE a list with distance and alignment
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
+#" @export
 levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,append=NULL,align=FALSE,nThreads=1) {
 	if(align&nThreads>1)stop(simpleError('Parallel and align not compatible yet'))
 	if(is.null(prepend))prepend<-c(FALSE,FALSE)
@@ -203,6 +208,7 @@ levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,appen
 #' @return Levenshtein distance matrix
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
+#" @export
 leven<-function(strings1,strings2=NULL,oneToOne=FALSE,homoLimit=0,vocal=0,debug=FALSE,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,nThreads=1){
 	if(nThreads>1&oneToOne)warnings('oneToOne not currently compatible with parallel processing')
 	if(any(!prepend %in% 1:2)|any(!append %in% 1:2))stop(simpleError('Specify prepend and append with 1 or 2'))
@@ -217,6 +223,9 @@ leven<-function(strings1,strings2=NULL,oneToOne=FALSE,homoLimit=0,vocal=0,debug=
 	}
 	if(substring1){append<-c(append,1);prepend<-c(prepend,1)}
 	if(substring2){append<-c(append,2);prepend<-c(prepend,2)}
+	append<-1:2 %in% append
+	prepend<-1:2 %in% prepend
+
 	#doesn't seem to be any speed benefit to using lapply or doing the looping in C (strange)
 	if(oneToOne){
 		distMat<-rep(NA,nStrings1)
