@@ -19,6 +19,7 @@
 #' @keywords alignment, string, distance, levenshtein
 #' @seealso \code{Biostrings}
 #' @examples
+#' library(leven)
 #' leven('ACAC','ACACA')
 NULL
 

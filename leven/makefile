@@ -12,11 +12,14 @@ ${fileName}:
 	R --vanilla -e "package.skeleton('${fileName}',code_files='${fileName}.R',force=TRUE)"
 	cp DESCRIPTION ${fileName}/DESCRIPTION
 	echo Date: `date`>>${fileName}/DESCRIPTION
-	R --vanilla -e "library(roxygen);roxygenize('${fileName}',roxygen.dir='${fileName}',copy.package=FALSE)"
+	R --vanilla -e "library(roxygen2);roxygenize('${fileName}')"
 	@echo Copying C
 	mkdir ${fileName}/src
 	cp *.c ${fileName}/src
-	rmdir ${fileName}/inst/doc ${fileName}/inst
+	#rmdir ${fileName}/inst/doc ${fileName}/inst
+	rmdir ${fileName}/inst
+	#no idea why roxygen doesn't take care of this
+	cp NAMESPACE ${fileName}/NAMESPACE
 
 clean:
 	rm -r ${fileName} ${fileName}_${version}.tar.gz
