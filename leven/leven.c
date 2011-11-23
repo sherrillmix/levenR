@@ -5,6 +5,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
+
+#define forR 1
+#if forR==1
+	#include <R.h>
+	#define errorMessage(A,B) error(A)
+	#define warningMessage(A) warning(A)
+#else
+	#define errorMessage(A,B) printf(A);exit(B)
+	#define warningMessage(A) printf(A)
+#endif
+
 
 int countMismatch(char *s1, char *s2, int length, int s2Offset, int cutoff, int *weights) {
 	int answer=0;
@@ -244,5 +256,64 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		for(i = 0;i<n1+1;i++)free(array[i]);
 		free(array);
 	}
+}
+
+struct levenArgs{
+	int *answer;
+	char **s1;
+	char **s2;
+	int *homoLimit;
+	int *prepend;
+	int *append;
+	int *debug;
+	int *isAlign;
+	char **align;
+	int *nStrings;
+	int iRange[2];
+	int jRange[2];
+};
+
+void *levenAllPar(void *levenArgs){
+	struct levenArgs *args=(struct levenArgs *)levenArgs;
+	//printf("HERE %d ",args->id);
+	unsigned int i, j, answerIndex;
+	for(i=args->iRange[0];i<=args->iRange[1];i++){
+		for(j=args->iRange[0];j<=args->iRange[1];j++){
+			levenAll(&args->answer[i*args->nStrings[0]+j],&args->s1[i],&args->s2[j],args->homoLimit,args->prepend,args->append,args->debug,args->isAlign,args->align);
+		}
+	}
+	//printf("HERE2 %d ",args->id);
+}
+void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLimit, int *prepend, int *append, int *debug, int *nThread){
+	//just split on i  for now
+	unsigned int i;//counter
+	int nextI;//count up when dividing strings
+	int nThreads=nThread[0];
+	int stepSize;
+	if(nStrings[0]<nThreads)nThreads=nStrings[0];
+	int *isAlign=NULL;
+	char **align=NULL;
+	//threads
+	pthread_t *threads=(pthread_t *)malloc(sizeof(pthread_t)*nThreads);
+	struct levenArgs **args=(struct levenArgs **)malloc(sizeof(struct levenArgs*)*nThreads);
+	for(i=0;i<nThreads;i++){
+		args[i]=(struct levenArgs *)malloc(sizeof(struct levenArgs));
+		args[i]->answer=answer; args[i]->s1=s1;args[i]->s2=s2;args[i]->homoLimit=homoLimit;args[i]->prepend=prepend;args[i]->append=append;args[i]->debug=debug;args[i]->isAlign=isAlign;args[i]->align=align;args[i]->nStrings=nStrings;
+		
+		stepSize=(nStrings[0]-nextI)/nThreads;
+		args[i]->iRange[0]=nextI;
+		args[i]->iRange[0]=nextI+stepSize-1;
+		nextI+=stepSize;
+		//not doing anything smart with j now
+		args[i]->jRange[0]=0;
+		args[i]->jRange[0]=nStrings[1]-1;
+		if(pthread_create(&threads[i],NULL,levenAllPar,&args[i])){errorMessage("Couldn't create thread",9);}
+	}
+	for(i=0;i<nThreads;i++)free(args[i]);
+	free(args);
+	free(threads);
+
+
+
 }
 
