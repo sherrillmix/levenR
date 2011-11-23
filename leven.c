@@ -276,7 +276,6 @@ struct levenArgs{
 void *levenAllPar(void *levenArgs){
 	struct levenArgs *args=(struct levenArgs *)levenArgs;
 	if(*args->debug)printf("Thread started. iRange: %d-%d, %d-%d\n",args->iRange[0],args->iRange[1],args->jRange[0],args->jRange[1]);
-	printf("Thread started. iRange: %d-%d, %d-%d\n",args->iRange[0],args->iRange[1],args->jRange[0],args->jRange[1]);
 	unsigned int i, j;
 	int *ansPoint;
 	for(i=args->iRange[0];i<=args->iRange[1];i++){
@@ -286,7 +285,6 @@ void *levenAllPar(void *levenArgs){
 		}
 	}
 	if(*args->debug)printf("Thread ended. iRange: %d-%d\n",args->iRange[0],args->iRange[1]);
-	printf("Thread ended. iRange: %d-%d\n",args->iRange[0],args->iRange[1]);
 }
 void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLimit, int *prepend, int *append, int *debug, int *nThread){
 	//just split on i  for now
