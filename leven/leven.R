@@ -140,51 +140,51 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 #' @param string1 A single string 
 #' @param string2 Another single string
 #' @param homoLimit deletions or insertions in homopolymers > homoLimit cost 0
-#' @param distance disabled at the moment
 #' @param debug Output various debugging information
 #' @param prepend 1 or 2 for ends-free on front of string 1 or 2
 #' @param append 1 or 2 for ends-free on back of string 1 or 2
 #' @param align Should an alignment be calculated
+#' @param nThreads If threads >1, run nThreads threads in parallel 
 #' @return Either a distance or if align==TRUE a list with distance and alignment
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
-levenAll <- function(string1, string2,distance=FALSE,homoLimit=0,debug=FALSE,prepend=NULL,append=NULL,align=FALSE) {
+levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,append=NULL,align=FALSE,nThreads=1) {
+	if(align&nThreads>1)stop(simpleError('Parallel and align not compatible yet'))
 	if(is.null(prepend))prepend<-c(FALSE,FALSE)
 	if(is.null(append))append<-c(FALSE,FALSE)
 	if(length(append)!=2&length(prepend!=2))stop(simpleError('Specify prepend and append as a vector of two logicals'))
 	if(any(!is.logical(c(prepend,append))))stop(simpleError('Specify prepend and append as a vector of two logicals'))
-	if(any(prepend & rev(append))){
-		runs<-list(c(prepend[1],FALSE,append[1],FALSE),c(FALSE,prepend[2],FALSE,append[2]))
-	}else runs<-list(c(prepend,append))
+	if(any(prepend & rev(append)))runs<-list(c(prepend[1],FALSE,append[1],FALSE),c(FALSE,prepend[2],FALSE,append[2]))
+	else runs<-list(c(prepend,append))
 
-	#make sure we're only dealing with 1 string each
-	string1<-string1[1];string2<-string2[1]
-	n1<-nchar(string1)
-	n2<-nchar(string2)
-	if(is.na(string1)|is.na(string2))stop(simpleError('NULL or NA string in levenAll'))
-	
-	#don't forget to deal with runs
-	if(align){
-		isAlign<-1
-		outStrings<-rep(paste(rep('Z',2*(n1+n2)),collapse=''),2)
+	if(any(is.na(string1))|any(is.na(string2)))stop(simpleError('NULL or NA string in levenAll'))
+
+	if(nThreads==1){
+		#make sure we're only dealing with 1 string each
+		string1<-string1[1];string2<-string2[1]
+		out<--99
+		#don't forget to deal with runs
+		if(align){
+			n1<-nchar(string1)
+			n2<-nchar(string2)
+			isAlign<-1
+			outStrings<-rep(paste(rep('Z',2*(n1+n2)),collapse=''),2)
+		}else{
+			isAlign<-0
+			outStrings<-c('','')
+		}
+		ans<-lapply(runs,function(x).C('levenAll',as.integer(out),as.character(string1),as.character(string2),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug),as.integer(isAlign),as.character(outStrings),PACKAGE='leven')[c(1,9)])
+		selector<-which.min(sapply(ans,'[[',1))
+		if(!align)output<-ans[[selector]][[1]]
+		else output<-ans[[selector]]
 	}else{
-		isAlign<-0
-		outStrings<-c('','')
+		out<-rep(-99,length(string1)*length(string2))
+		nStrings<-c(length(string1),length(string2))
+		ans<-do.call(rbind,lapply(runs,function(x).C('parallelLeven',as.integer(out),as.character(string1),as.character(string2),as.integer(nStrings),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug),as.integer(nThreads),PACKAGE='leven')[[1]]))
+		ans<-apply(ans,2,min)
+		output<-matrix(ans,nrow=nStrings[1],ncol=nStrings[2])
 	}
-	ans<-lapply(runs,function(x).C('levenAll',as.integer(1),as.character(string1),as.character(string2),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug),as.integer(isAlign),as.character(outStrings),PACKAGE='leven')[c(1,9)])
-	#FIX UP DISTANCE CALCULATION
-#	if(distance)ans[[1]]
-#		ans2<-.C('levenAll',as.integer(1),as.character(string2),as.character(string1),as.integer(subString),as.integer(homoLimit),as.integer(prepend),as.integer(append),as.integer(debug))
-#		if(distance){if(ans2[[1]][1]/n2<ans[[1]][1]/n1){ans<-ans2;string1<-string2;n1<-n2}} #replacing answer and string for later calculation
-#		else{if(ans2[[1]][1]<ans[[1]][1])ans<-ans2}
-#	}
-	selector<-which.min(sapply(ans,'[[',1))
-	if(!align)output<-ans[[selector]][[1]]
-	else output<-ans[[selector]]
-	#if (distance){
-	#	if(subString) return(ans[[1]][1]/n1)
-	#	else return(ans[[1]][1]/max(n1,n2))
-	#}
+		
 	return(output)
 }
 
@@ -192,7 +192,6 @@ levenAll <- function(string1, string2,distance=FALSE,homoLimit=0,debug=FALSE,pre
 #' @param strings1 vector of strings to compare to strings2 (or as strings1 x strings1 if strings2==NULL)
 #' @param strings2 vector of strings to compare to strings1 or NULL (either strings1 or strings2 should be 1 or should have equal lengths)
 #' @param oneToOne compare strings1[1] to strings2[1], strings1[2] to strings2[2],... (both vectors must be same length)
-#' @param distance if FALSE return edit distance, if TRUE return edit distance/min(nchar(seq1,seq2)
 #' @param homoLimit deletions or insertions in homopolymers > homoLimit cost 0
 #' @param vocal Integer to display a status message every vocal iterations
 #' @param debug If TRUE display various debugging information
@@ -200,22 +199,15 @@ levenAll <- function(string1, string2,distance=FALSE,homoLimit=0,debug=FALSE,pre
 #' @param append 1 or 2 for ends-free on back of string 1 or 2
 #' @param substring1 ends-free for strings1
 #' @param substring2 ends-free for strings2
-#' @param parallel Run using mclapply? This requires package parallel and does not work with oneToOne=TRUE.
+#' @param nThreads Run using threads?
 #' @return Levenshtein distance matrix
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
-leven<-function(strings1,strings2=NULL,oneToOne=FALSE,distance=FALSE,homoLimit=0,vocal=0,debug=FALSE,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,parallel=FALSE){
-	if(parallel&!oneToOne){
-		if(!suppressWarnings(require('parallel')))library('multicore')
-		loopFunc<-mclapply
-	}else{
-		loopFunc<-lapply
-	}
+leven<-function(strings1,strings2=NULL,oneToOne=FALSE,homoLimit=0,vocal=0,debug=FALSE,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,nThreads=1){
+	if(nThreads>1&oneToOne)warnings('oneToOne not currently compatible with parallel processing')
 	if(any(!prepend %in% 1:2)|any(!append %in% 1:2))stop(simpleError('Specify prepend and append with 1 or 2'))
-	multiToMulti<-FALSE
 	if(is.null(strings2)){
 		strings2<-strings1
-		multiToMulti<-TRUE
 	}
 	nStrings1=length(strings1)
 	nStrings2=length(strings2)
@@ -225,21 +217,24 @@ leven<-function(strings1,strings2=NULL,oneToOne=FALSE,distance=FALSE,homoLimit=0
 	}
 	if(substring1){append<-c(append,1);prepend<-c(prepend,1)}
 	if(substring2){append<-c(append,2);prepend<-c(prepend,2)}
-	append<-1:2 %in% append
-	prepend<-1:2 %in% prepend
-	if(any(c(prepend,append)))multiToMulti<-FALSE #ABC in C, different than C in ABC with ends free
-	distMat<-matrix(NA,nrow=nStrings1,ncol=nStrings2)
 	#doesn't seem to be any speed benefit to using lapply or doing the looping in C (strange)
-	for(i in 1:ifelse(nStrings1>1,nStrings1,1)){
-		if(vocal[1]>0&i%%vocal[1]==0)message("Working on string ",i)
-		indices<-ifelse(multiToMulti,i,1):nStrings2
-		distMat[i,indices]<-unlist(loopFunc(strings2[indices],function(x)levenAll(strings1[i],x,distance=distance,homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)))
-		if(multiToMulti)distMat[indices,i]<-distMat[i,indices]
-		#for(j in ifelse(multiToMulti,i,1):nStrings2){
-			#if(!is.na(vocal[2])&j%%vocal[2]==0)message("Working on string ",i,' - ',j)
-			#dist.mat[i,j]<-levenAll(strings1[i],strings2[ifelse(oneToOne,i,j)],distance=distance,homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)
-			#if(multiToMulti)dist.mat[j,i]<-dist.mat[i,j]
-		#}
+	if(oneToOne){
+		distMat<-rep(NA,nStrings1)
+		for(i in 1:nStrings1){
+			if(vocal[1]>0&i%%vocal[1]==0)message("Working on string ",i)
+			distMat[i]<-levenAll(strings1[i],strings2[i],homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)
+		}
+	}else{
+		distMat<-matrix(NA,nrow=nStrings1,ncol=nStrings2)
+		if(nThreads==1){
+			for(i in 1:nStrings1){
+				for(j in 1:nStrings2){
+					distMat[i,j]<-levenAll(strings1[i],strings2[j],homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)
+				}
+			}
+		}else{
+			distMat<-levenAll(strings1,strings2,homoLimit=homoLimit,debug=debug,append=append,prepend=prepend,nThreads=nThreads)
+		}
 	}
 	return(distMat)
 }
