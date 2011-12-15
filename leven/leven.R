@@ -86,6 +86,15 @@ bestMismatch <- function(pattern, subject, pos=findAll, weights=rep(1,nchar(patt
 #" @export
 combineAligns<-function(refs,aligns){
 	out<-rep('',length(aligns))
+
+	#deal with starts by stepping backward from ref
+	firstNonGap<-regexpr('[^-*]',refs)-1
+	maxNonGap<-max(firstNonGap)
+	dummy<-paste(rep('-',maxNonGap),collapse='')
+	out<-sprintf('%s%s%s',out,substring(dummy,1,maxNonGap-firstNonGap),substring(aligns,1,firstNonGap))
+	aligns<-substring(aligns,maxNonGap+1)
+	refs<-substring(refs,maxNonGap+1)
+
 	#rather inefficient
 	while(any(nchar(refs)>0)){
 		selector<-substring(refs,1,1)=='-'
