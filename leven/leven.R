@@ -199,7 +199,6 @@ levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,appen
 		selector<-which.min(sapply(ans,'[[',1))
 		if(!align)output<-ans[[selector]][[1]]
 		else output<-ans[[selector]]
-		browser()
 	}else{
 		out<-rep(-99,length(string1)*length(string2))
 		nStrings<-c(length(string1),length(string2))
