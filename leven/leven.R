@@ -128,7 +128,7 @@ combineAligns<-function(refs,aligns){
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 #" @export
-levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE){
+levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,trimOuterGaps=FALSE){
 	if(length(ref)>1)stop(simpleError('Only a single reference supported'))
 	if(substring1){append<-c(append,1);prepend<-c(prepend,1)}
 	if(substring2){append<-c(append,2);prepend<-c(prepend,2)}
@@ -138,6 +138,13 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 	refs<-c(ref,sapply(aligns,'[[',2))
 	aligns<-c(ref,sapply(aligns,'[[',1))
 	out<-combineAligns(refs,aligns)
+	if(trimOuterGaps){
+		refRange<-range(gregexpr('[^-]',out[1])[[1]])
+		nonGaps<-gregexpr('[^-]',out[-1])
+		alignRange<-c(min(sapply(nonGaps,min)),max(sapply(nonGaps,max)))
+		out<-substring(out,max(refRange[1],alignRange[1]),min(refRange[2],alignRange[2]))
+	}
+
 	#refGaps<-lapply(gregexpr('-',refs,fixed=TRUE),function(x)x[x!=-1])
 	#uniqueGaps<-sort(unique(unlist(refGaps)))
 	#finalOut<-vector('list',length(strings)+1)
