@@ -153,8 +153,8 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 	if(append[1]){
 		min=*answer;
 		appendTracker=n2;
-		for(j = 0; j <= n2; ++j ){
-			if(lastRow[j]<min){
+		for(j = 0; j < n2; j++ ){
+			if(lastRow[j]<=min){ //find furthest down to minimize deleletions (I hope)
 				min=lastRow[j];
 				appendTracker=j;
 			}
@@ -163,11 +163,11 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 	}
 	if(append[0]){
 		min=*answer;
-		appendTracker=n2;
+		appendTracker=n1;
 		if(*debug)printf("Last column: ");
-		for(i = 0; i <= n1; ++i ){
+		for(i = 0; i < n1; i++ ){
 			if(*debug)printf(" %d ",endCol[i]);
-			if(endCol[i]<min){
+			if(endCol[i]<=min){ //find furthest down to minimize deleletions (I hope)
 				min=endCol[i];
 				appendTracker=i;
 			}
@@ -180,7 +180,8 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		coords[2]=0;
 		if(append[0]){
 			for(i=n1;i>appendTracker;i--){
-				align[0][coords[2]]=s1[0][coords[0]];
+				align[0][coords[2]]=s1[0][coords[0]-1];
+				if(*debug)printf("append: '%c'='%c'\n",align[0][coords[2]],s1[0][coords[0]-1]);
 				align[1][coords[2]]='-';	
 				coords[0]--;
 				coords[2]++;
@@ -190,7 +191,7 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		if(append[1]){
 			for(j=n2;j>appendTracker;j--){
 				align[0][coords[2]]='-';	
-				align[1][coords[2]]=s2[0][coords[1]];
+				align[1][coords[2]]=s2[0][coords[1]-1];
 				coords[1]--;
 				coords[2]++;
 				if(j==0)exit(1);//if this happens we're going to wrap around (shouldn't happen)
@@ -202,7 +203,8 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 			upCoord=coords[0]<1?0:coords[0]-1;
 			leftCoord=coords[1]<1?0:coords[1]-1;
 			//find min of three choices
-			newCoords[0]=upCoord;newCoords[1]=leftCoord;
+			newCoords[0]=upCoord;
+			newCoords[1]=leftCoord;
 			min=array[upCoord][leftCoord];
 			if(array[upCoord][coords[1]]<min){
 				min=array[upCoord][coords[1]];
@@ -228,6 +230,11 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 			}
 			//printf("New %d %d left %d up %d coords[2] %d\n",coords[0],coords[1],leftCoord,upCoord,coords[2]);
 			coords[2]++;
+			if(*debug){
+				align[0][coords[2]]='\0';
+				align[1][coords[2]]='\0';
+				printf("%s = %s\n",align[0],align[1]);
+			}
 		}
 		align[0][coords[2]]='\0';
 		align[1][coords[2]]='\0';

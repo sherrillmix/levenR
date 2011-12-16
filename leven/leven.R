@@ -88,12 +88,12 @@ combineAligns<-function(refs,aligns){
 	out<-rep('',length(aligns))
 
 	#deal with starts by stepping backward from ref
-	firstNonGap<-regexpr('[^-*]',refs)-1
-	maxNonGap<-max(firstNonGap)
-	dummy<-paste(rep('-',maxNonGap),collapse='')
-	out<-sprintf('%s%s%s',out,substring(dummy,1,maxNonGap-firstNonGap),substring(aligns,1,firstNonGap))
-	aligns<-substring(aligns,maxNonGap+1)
-	refs<-substring(refs,maxNonGap+1)
+	lastGap<-regexpr('[^-*]',refs)-1
+	maxGap<-max(lastGap)
+	dummy<-paste(rep('-',maxGap),collapse='')
+	out<-sprintf('%s%s%s',out,substring(dummy,1,maxGap-lastGap),substring(aligns,1,lastGap))
+	aligns<-substring(aligns,firstNonGap+1)
+	refs<-substring(refs,firstNonGap+1)
 
 	#rather inefficient
 	while(any(nchar(refs)>0)){
@@ -192,6 +192,7 @@ levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,appen
 		selector<-which.min(sapply(ans,'[[',1))
 		if(!align)output<-ans[[selector]][[1]]
 		else output<-ans[[selector]]
+		browser()
 	}else{
 		out<-rep(-99,length(string1)*length(string2))
 		nStrings<-c(length(string1),length(string2))
