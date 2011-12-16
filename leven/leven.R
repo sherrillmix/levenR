@@ -92,8 +92,8 @@ combineAligns<-function(refs,aligns){
 	maxGap<-max(lastGap)
 	dummy<-paste(rep('-',maxGap),collapse='')
 	out<-sprintf('%s%s%s',out,substring(dummy,1,maxGap-lastGap),substring(aligns,1,lastGap))
-	aligns<-substring(aligns,firstNonGap+1)
-	refs<-substring(refs,firstNonGap+1)
+	aligns<-substring(aligns,lastGap+1)
+	refs<-substring(refs,lastGap+1)
 
 	#rather inefficient
 	while(any(nchar(refs)>0)){
