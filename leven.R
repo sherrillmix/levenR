@@ -142,7 +142,8 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 		refRange<-range(gregexpr('[^-]',out[1])[[1]])
 		nonGaps<-gregexpr('[^-]',out[-1])
 		alignRange<-c(min(sapply(nonGaps,min)),max(sapply(nonGaps,max)))
-		out<-substring(out,max(refRange[1],alignRange[1]),min(refRange[2],alignRange[2]))
+		trimRange<-c(max(refRange[1],alignRange[1]),min(refRange[2],alignRange[2]))
+		out<-substring(out,trimRange[1],trimRange[2])
 	}
 
 	#refGaps<-lapply(gregexpr('-',refs,fixed=TRUE),function(x)x[x!=-1])
@@ -151,7 +152,9 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 	#for(i in uniqueGaps){
 		#selector<-sapply(refGaps,function(x)i %in% refGaps)#could optimize here
 	#}
-	return(list('ref'=out[1],'align'=out[-1]))
+	out<-list('ref'=out[1],'align'=out[-1])
+	if(trimOuterGaps)attr(out,'start')<-trimRange[1]
+	return(out)
 }
 
 #' Wrapper for .C Levenshtein function
