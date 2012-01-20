@@ -23,6 +23,35 @@
 #' leven('ACAC','ACACA')
 NULL
 
+#' Reverse a string
+#'
+#' Reverse a string e.g. ABCDE becomes EDCBA
+#' @param strings Vector of strings to be revered
+#' @return Vector of reversed strings
+reverseString<-function(strings){
+	output<-sapply(strsplit(strings,''),function(x)paste(rev(x),collapse=''))	
+	return(output)
+}
+
+#' Compliment DNA
+#'
+#' Compliment a string of DNA e.g. A<->T,G<->C. Doesn't attempt to deal with ambigous bases.
+#' @param dnas Vector of DNA sequences
+#' @return Vector of complimented DNA strings
+complimentDna<-function(dnas,brackets=TRUE,ambigs=TRUE){
+	finds<-'TGAC'
+	replaces<-'ACTG'
+	return(chartr(finds,replaces,dnas))
+}
+
+#' Reverse compliment dna
+#'
+#' Reverse compliment a string of DNA
+#' @param dnas Vector of sequences
+#' @return Vector of reverse complimented DNA strings
+revComp<-function(dnas){
+	return(complimentDna(reverseString(dnas)))
+}
 
 #' Find fewest mismatches for multiple patterns
 #'
@@ -124,17 +153,18 @@ combineAligns<-function(refs,aligns){
 #' @param substring2 ends-free for strings2
 #' @param prepend 1 or 2 for ends-free on front of string 1 or 2
 #' @param append 1 or 2 for ends-free on back of string 1 or 2
+#' @param Find and return the best alignment of identity or reverse compliment of queries
 #' @return A list with first entry for the gapped reference and second entry all the aligned strings
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 #" @export
-levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,trimOuterGaps=FALSE){
+levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,trimOuterGaps=FALSE,revComp=FALSE){
 	if(length(ref)>1)stop(simpleError('Only a single reference supported'))
 	if(substring1){append<-c(append,1);prepend<-c(prepend,1)}
 	if(substring2){append<-c(append,2);prepend<-c(prepend,2)}
 	append<-1:2 %in% append
 	prepend<-1:2 %in% prepend
-	aligns<-lapply(strings,function(x)levenAll(x,ref,homoLimit=homoLimit,prepend=prepend,append=append,align=TRUE)[[2]])
+	aligns<-lapply(strings,function(x)levenAll(x,ref,homoLimit=homoLimit,prepend=prepend,append=append,align=TRUE,revComp=revComp)[[2]])
 	refs<-c(ref,sapply(aligns,'[[',2))
 	aligns<-c(ref,sapply(aligns,'[[',1))
 	out<-combineAligns(refs,aligns)
@@ -168,12 +198,13 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 #' @param prepend 1 or 2 for ends-free on front of string 1 or 2
 #' @param append 1 or 2 for ends-free on back of string 1 or 2
 #' @param align Should an alignment be calculated
+#' @param revComp Should the reverse compliment of string1 also be tested and the best of identity or reverse compliment returned?
 #' @param nThreads If threads >1, run nThreads threads in parallel 
 #' @return Either a distance or if align==TRUE a list with distance and alignment
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 #" @export
-levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,append=NULL,align=FALSE,nThreads=1) {
+levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,append=NULL,revComp=FALSE,align=FALSE,nThreads=1) {
 	if(align&nThreads>1)stop(simpleError('Parallel and align not compatible yet'))
 	if(is.null(prepend))prepend<-c(FALSE,FALSE)
 	if(is.null(append))append<-c(FALSE,FALSE)
@@ -181,6 +212,8 @@ levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,appen
 	if(any(!is.logical(c(prepend,append))))stop(simpleError('Specify prepend and append as a vector of two logicals'))
 	if(any(prepend & rev(append)))runs<-list(c(prepend[1],FALSE,append[1],FALSE),c(FALSE,prepend[2],FALSE,append[2]))
 	else runs<-list(c(prepend,append))
+	if(revComp)runs<-c(lapply(runs,function(x)c(x,FALSE)),lapply(runs,function(x)c(x,TRUE)))
+	else runs<-lapply(runs,function(x)c(x,FALSE))
 
 	if(any(is.na(string1))|any(is.na(string2)))stop(simpleError('NULL or NA string in levenAll'))
 
@@ -198,7 +231,7 @@ levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,appen
 			isAlign<-0
 			outStrings<-c('','')
 		}
-		ans<-lapply(runs,function(x).C('levenAll',as.integer(out),as.character(string1),as.character(string2),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug),as.integer(isAlign),as.character(outStrings),PACKAGE='leven')[c(1,9)])
+		ans<-lapply(runs,function(x).C('levenAll',as.integer(out),as.character(if(x[5]) revComp(string1) else string1),as.character(string2),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug),as.integer(isAlign),as.character(outStrings),PACKAGE='leven')[c(1,9)])
 		selector<-which.min(sapply(ans,'[[',1))
 		if(!align)output<-ans[[selector]][[1]]
 		else output<-ans[[selector]]
