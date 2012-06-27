@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include <stdint.h>
 
 #define forR 1
 #if forR==1
@@ -70,12 +71,30 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 	unsigned int* tmpRow;
 	unsigned int min;
 	unsigned int **array;
+	uint8_t **trace; //bit field: 1=goes down,2=goes right,4=goes diagonal,8=comes from up, 16=comes from left, 32=comes from diagonal, 64=on final path
 	unsigned int appendTracker; //keep track of location for alignment when we're doing ends free
 	unsigned int coords[3],newCoords[2],upCoord,leftCoord; //for tracing back
+	unsigned int d_del,d_ins,d_sub;
 	if(isAlign[0]){
 		//Make giant array
 		array=malloc(sizeof(unsigned int *)*(n1+1));
 		for(i = 0;i<n1+1;i++)array[i]=malloc(sizeof(unsigned int)*(n2+1));
+		//Make traceback array for prettier alignments
+		trace=malloc(sizeof(uint8_t *)*(n1+1));
+		for(i = 0;i<n1+1;i++)trace[i]=malloc(sizeof(uint8_t)*(n2+1));
+		for(i = 0;i<n1+1;i++){
+			for(j = 0;j<n2+1;j++){
+				trace[i][j]=0;
+				if(i==0){
+					if(j!=n2)trace[i][j] |=2;
+					if(j!=0)trace[i][j] |=16;
+				}
+				if(j==0){
+					if(i!=n1)trace[i][j] |=1;
+					if(i!=0)trace[i][j] |=8;
+				}
+			}
+		}
 	}
 
 	if(*homoLimit){
@@ -128,13 +147,28 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		for(j = 1; j <= n2; j++){
 			//printf("S1[%d]:%c S2[%d]:%c\n",i-1,s1[0][i-1],j-1,s2[0][j-1]);
 			cost_ins=cost_inss[j-1];
-			unsigned int d_del = lastRow[j] + cost_del;
-			unsigned int d_ins = thisRow[j-1] + cost_ins;
+			d_del = lastRow[j] + cost_del;
+			d_ins = thisRow[j-1] + cost_ins;
 			//printf("%d %d",i,j);
-			unsigned int d_sub = lastRow[j-1] + ( s1[0][i-1] == s2[0][j-1] ? 0 : cost_sub );
+			d_sub = lastRow[j-1] + ( s1[0][i-1] == s2[0][j-1] ? 0 : cost_sub );
 			thisRow[j]=d_ins;
 			if (d_del < thisRow[j])thisRow[j]=d_del;
 			if (d_sub < thisRow[j])thisRow[j]=d_sub;	
+			if(isAlign[0]){
+				printf("%d,%d:%d,%d,%d\n",i,j,d_del==thisRow[j],d_ins==thisRow[j],d_sub==thisRow[j]);
+				if(d_del==thisRow[j]){
+					trace[i-1][j]|= 1;
+					trace[i][j]|=8;
+				}
+				if(d_ins==thisRow[j]){
+					trace[i][j-1]|= 2;
+					trace[i][j]|=16;
+				}
+				if(d_sub==thisRow[j]){
+					trace[i-1][j-1]|= 4;
+					trace[i][j]|=32;
+				}
+			}
 		}
 		//keep track of the final column for substringing
 		endCol[i]=thisRow[n2];
@@ -197,7 +231,51 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 				if(j==0)exit(1);//if this happens we're going to wrap around (shouldn't happen)
 			}
 		}
-		//could reprogram to look for least gappy alignment?
+		//traceback to start storing valid paths, then descend following lowest values preferring diagonals
+		//traceback
+		unsigned int rightCoord=n2;
+		unsigned int newRightCoord;
+		unsigned int leftCoord=0;
+		unsigned int newLeftCoord;
+		for(i=n1;i+1>=1;i--){//careful about wrapping around here
+			newRightCoord=0;
+			newLeftCoord=n2;;
+			for(j=rightCoord;j+1>=leftCoord+1;j--){//careful about wrapping here
+				if(trace[i][j] & 64 ==0)continue;//current node not on true path so continue
+				printf("%d,%d: %d-%d\n",i,j,rightCoord,leftCoord);
+				//up <=current
+				if(i>0 && array[i-1][j]<=array[i][j]){
+					if(j>=newRightCoord)newRightCoord=j;
+					if(j<=newLeftCoord)newLeftCoord=j;
+					trace[i-1][j] |= 1;
+				}
+				//diagonal <=current
+				if(i>0 && j>0 && array[i-1][j-1]<=array[i][j]){
+					if(j-1>=newRightCoord)newRightCoord=j-1;
+					if(j-1<=newLeftCoord)newLeftCoord=j;
+					trace[i-1][j-1] |= 2;
+				}
+				//left cell <= current
+				if(j>0 && array[i][j-1]<=array[i][j]){
+					trace[i][j-1] |= 4;
+				}//else{
+					//we can't step downwards from an upper row so we must be done with this row
+					//oops but we could have stepped up from lower row
+					//break;
+				//}
+			}
+			leftCoord=newLeftCoord;
+			rightCoord=newRightCoord;
+		}
+		if(*debug){
+			for(i=0;i<n1+1;i++){
+				for(j=0;j<n2+1;j++){
+					printf("%d ",trace[i][j]);
+				}
+				printf("\n");
+			}
+		}
+
 		while(coords[0]!=0||coords[1]!=0){
 			//deal with edge of array
 			upCoord=coords[0]<1?0:coords[0]-1;
@@ -246,12 +324,11 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		if(*debug){
 			for(i=0;i<n1+1;i++){
 				for(j=0;j<n2+1;j++){
-				printf("%d ",array[i][j]);
+					printf("%d ",array[i][j]);
 				}
 				printf("\n");
 			}
 		}
-			
 	}
 	//printf(" %d ",*answer);
 	free(endCol);
@@ -262,6 +339,8 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 	if(isAlign[0]){
 		for(i = 0;i<n1+1;i++)free(array[i]);
 		free(array);
+		for(i = 0;i<n1+1;i++)free(trace[i]);
+		free(trace);
 	}
 }
 
@@ -327,8 +406,5 @@ void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLi
 	for(i=0;i<nThreads;i++)free(args[i]);
 	free(args);
 	free(threads);
-
-
-
 }
 
