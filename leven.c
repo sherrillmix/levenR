@@ -147,6 +147,8 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		for(j = 1; j <= n2; j++){
 			//printf("S1[%d]:%c S2[%d]:%c\n",i-1,s1[0][i-1],j-1,s2[0][j-1]);
 			cost_ins=cost_inss[j-1];
+			if(i==n1&append[1])cost_ins=0;
+			if(j==n2&append[0])cost_del=0;
 			d_del = lastRow[j] + cost_del;
 			d_ins = thisRow[j-1] + cost_ins;
 			//printf("%d %d",i,j);
@@ -155,7 +157,7 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 			if (d_del < thisRow[j])thisRow[j]=d_del;
 			if (d_sub < thisRow[j])thisRow[j]=d_sub;	
 			if(isAlign[0]){
-				printf("%d,%d:%d,%d,%d\n",i,j,d_del==thisRow[j],d_ins==thisRow[j],d_sub==thisRow[j]);
+				//printf("%d,%d:%d,%d,%d\n",i,j,d_del==thisRow[j],d_ins==thisRow[j],d_sub==thisRow[j]);
 				if(d_del==thisRow[j]){
 					trace[i-1][j]|= 1;
 					trace[i][j]|=8;
@@ -184,75 +186,22 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 	}
 	if(*debug){for(int printer = 0; printer <=n2; ++printer) printf("%d ",lastRow[printer]); printf("\n");}
 	*answer = lastRow[n2];
-	if(append[1]){
-		min=*answer;
-		appendTracker=n2;
-		for(j = 0; j <= n2; j++ ){
-			if(lastRow[j]<=min){ //find furthest down to minimize deletions
-				min=lastRow[j];
-				appendTracker=j;
-			}
-		}
-		*answer = min;
-	}
-	if(append[0]){
-		min=*answer;
-		appendTracker=n1;
-		if(*debug)printf("Last column: ");
-		for(i = 0; i <= n1; i++ ){
-			if(*debug)printf(" %d ",endCol[i]);
-			if(endCol[i]<=min){ //find furthest down to minimize deletions
-				min=endCol[i];
-				appendTracker=i;
-			}
-		}
-		*answer = min;
-	}
 	if(isAlign[0]){
-		coords[0]=n1;
-		coords[1]=n2;
-		coords[2]=0;
-		printf("APPEND %d\n",appendTracker);
-		if(append[0]){
-			for(i=n1;i>appendTracker;i--){
-				if(i==0)exit(1);//if this happens we're going to wrap around (shouldn't happen)
-				trace[i][n2] |=64;
-				trace[i][n2] |=8;
-				trace[i-1][n2] |=1;
-				align[0][coords[2]]=s1[0][coords[0]-1];
-				if(*debug)printf("append: '%c'='%c'\n",align[0][coords[2]],s1[0][coords[0]-1]);
-				align[1][coords[2]]='-';	
-				coords[0]--;
-				coords[2]++;
-			}
-		}
-		if(append[1]){
-			for(j=n2;j>appendTracker;j--){
-				if(j==0)exit(1);//if this happens we're going to wrap around (shouldn't happen)
-				trace[n1][j] |=64;
-				trace[n1][j] |=16;
-				trace[n1][j-1] |=2;
-				align[0][coords[2]]='-';	
-				align[1][coords[2]]=s2[0][coords[1]-1];
-				coords[1]--;
-				coords[2]++;
-			}
-		}
 		//traceback to start storing valid paths, then descend following lowest values preferring diagonals
 		//traceback
-		unsigned int rightCoord=coords[1];
+		unsigned int rightCoord=n2;
 		unsigned int newRightCoord;
 		unsigned int leftCoord=0;
 		unsigned int newLeftCoord;
-		trace[coords[0]][coords[1]] |=64;//last node after appending is on true path
+		trace[n1][n2] |=64;//last node after appending is on true path
 		//trace bit field: 1=goes down,2=goes right,4=goes diagonal,8=comes from up, 16=comes from left, 32=comes from diagonal, 64=on final path
 		//mark what nodes are on true path with a 64 in trace[i][j]
-		for(i=coords[0];i+1>=0+1;i--){//careful about wrapping around here
+		for(i=n1;i+1>=0+1;i--){//careful about wrapping around here
 			newRightCoord=0;
-			newLeftCoord=coords[1];
+			newLeftCoord=n2;
 			for(j=rightCoord;j+1>=leftCoord+1;j--){//careful about wrapping here
 				if((trace[i][j] & 64)==0)continue;//current node not on true path so continue
-				printf("%d,%d=%d: %d-%d\n",i,j,trace[i][j]&64,rightCoord,leftCoord);
+				//printf("%d,%d=%d: %d-%d\n",i,j,trace[i][j]&64,rightCoord,leftCoord);
 				//up
 				if(trace[i][j] & 8){
 					if(j>=newRightCoord)newRightCoord=j;
@@ -273,8 +222,8 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 			leftCoord=newLeftCoord;
 			rightCoord=newRightCoord;
 		}
-		//walk down trace from top left to bottom right
 		if(*debug){
+			printf("Trace matrix\n");
 			for(i=0;i<n1+1;i++){
 				for(j=0;j<n2+1;j++){
 					printf("%d ",trace[i][j]);
@@ -282,37 +231,48 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 				printf("\n");
 			}
 		}
+		//walk down trace from top left to bottom right
+		coords[0]=0;
+		coords[1]=0;
+		coords[2]=0;
 
-		while(coords[0]!=0||coords[1]!=0){
-			//deal with edge of array
-			upCoord=coords[0]<1?0:coords[0]-1;
-			leftCoord=coords[1]<1?0:coords[1]-1;
+		//trace bit field: 1=goes down,2=goes right,4=goes diagonal,8=comes from up, 16=comes from left, 32=comes from diagonal, 64=on final path
+		while(coords[0]<n1||coords[1]<n2){
 			//find min of three choices
-			newCoords[0]=upCoord;
-			newCoords[1]=leftCoord;
-			min=array[upCoord][leftCoord];
-			if(array[upCoord][coords[1]]<min){
-				min=array[upCoord][coords[1]];
-				newCoords[0]=upCoord;
+			min=UINT_MAX;
+
+			//go diagonal
+			if(trace[coords[0]][coords[1]]&4 && trace[coords[0]+1][coords[1]+1]&64 && array[coords[0]+1][coords[1]+1]<min ){
+				min=array[coords[0]+1][coords[1]+1];
+				newCoords[0]=coords[0]+1;
+				newCoords[1]=coords[1]+1;
+			}
+			//go down
+			if(trace[coords[0]][coords[1]]&1 && trace[coords[0]+1][coords[1]]&64 && array[coords[0]+1][coords[1]]<min ){
+				min=array[coords[0]+1][coords[1]];
+				newCoords[0]=coords[0]+1;
 				newCoords[1]=coords[1];
 			}
-			if(array[coords[0]][leftCoord]<min){
-				min=array[coords[0]][leftCoord];
+			//go right
+			if(trace[coords[0]][coords[1]]&2 && trace[coords[0]][coords[1]+1]&64 && array[coords[0]][coords[1]+1]<min ){
+				min=array[coords[0]][coords[1]+1];
 				newCoords[0]=coords[0];
-				newCoords[1]=leftCoord;
+				newCoords[1]=coords[1]+1;
 			}
+			if(*debug)printf("%d:%d,%d=>%d,%d",coords[2],coords[0],coords[1],newCoords[0],newCoords[1]);
+			if(newCoords[0]==coords[0]&&coords[1]==newCoords[1])break;
 			if(newCoords[0]==coords[0]){
 				align[0][coords[2]]='-';	
 			}else{
-				align[0][coords[2]]=s1[0][coords[0]-1];
-				coords[0]--;
+				align[0][coords[2]]=s1[0][coords[0]];
 			}
+			coords[0]=newCoords[0];
 			if(newCoords[1]==coords[1]){
 				align[1][coords[2]]='-';	
 			}else{
-				align[1][coords[2]]=s2[0][coords[1]-1];
-				coords[1]--;
+				align[1][coords[2]]=s2[0][coords[1]];
 			}
+			coords[1]=newCoords[1];
 			//printf("New %d %d left %d up %d coords[2] %d\n",coords[0],coords[1],leftCoord,upCoord,coords[2]);
 			coords[2]++;
 			if(*debug){
@@ -324,8 +284,8 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		align[0][coords[2]]='\0';
 		align[1][coords[2]]='\0';
 		//reverse these strings
-		revString(align[0],coords[2]);
-		revString(align[1],coords[2]);
+		//revString(align[0],coords[2]);
+		//revString(align[1],coords[2]);
 		if(*debug)printf("%s\n%s\n",align[0],align[1]);
 
 		if(*debug){
