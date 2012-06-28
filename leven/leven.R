@@ -38,7 +38,7 @@ reverseString<-function(strings){
 #' Compliment a string of DNA e.g. A<->T,G<->C. Doesn't attempt to deal with ambigous bases.
 #' @param dnas Vector of DNA sequences
 #' @return Vector of complimented DNA strings
-complimentDna<-function(dnas,brackets=TRUE,ambigs=TRUE){
+complimentDna<-function(dnas){
 	finds<-'TGAC'
 	replaces<-'ACTG'
 	return(chartr(finds,replaces,dnas))
@@ -153,18 +153,20 @@ combineAligns<-function(refs,aligns){
 #' @param substring2 ends-free for strings2
 #' @param prepend 1 or 2 for ends-free on front of string 1 or 2
 #' @param append 1 or 2 for ends-free on back of string 1 or 2
-#' @param Find and return the best alignment of identity or reverse compliment of queries
+#' @param trimOuterGaps Trim leading and trailing gaps
+#' @param revComp Find and return the best alignment of identity or reverse compliment of queries
+#' @param ... Additional arguments for levenAll
 #' @return A list with first entry for the gapped reference and second entry all the aligned strings
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 #" @export
-levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,trimOuterGaps=FALSE,revComp=FALSE){
+levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,trimOuterGaps=FALSE,revComp=FALSE,...){
 	if(length(ref)>1)stop(simpleError('Only a single reference supported'))
 	if(substring1){append<-c(append,1);prepend<-c(prepend,1)}
 	if(substring2){append<-c(append,2);prepend<-c(prepend,2)}
 	append<-1:2 %in% append
 	prepend<-1:2 %in% prepend
-	aligns<-lapply(strings,function(x)levenAll(x,ref,homoLimit=homoLimit,prepend=prepend,append=append,align=TRUE,revComp=revComp)[[2]])
+	aligns<-lapply(strings,function(x)levenAll(x,ref,homoLimit=homoLimit,prepend=prepend,append=append,align=TRUE,revComp=revComp,...)[[2]])
 	refs<-c(ref,sapply(aligns,'[[',2))
 	aligns<-c(ref,sapply(aligns,'[[',1))
 	out<-combineAligns(refs,aligns)

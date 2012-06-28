@@ -21,8 +21,8 @@
 
 int countMismatch(char *s1, char *s2, int length, int s2Offset, int cutoff, int *weights) {
 	int answer=0;
-	for(unsigned int i = 0; i < length; i++){
-		if(s1[i]!=s2[i+s2Offset]) answer+=weights[i];
+	for(unsigned int ii = 0; ii < length; ii++){
+		if(s1[ii]!=s2[ii+s2Offset]) answer+=weights[ii];
 		if(answer >= cutoff)return(answer);
 	}
 	return(answer);
@@ -35,28 +35,28 @@ void bestMismatch(int *ans, char **s1, char **s2, int *weights){
 	int tmp;
 	//INT_MAX doesn't appear to be defined
 	ans[0]=99999;
-	for(int i = 0; i <= lastPos; i++){
-		tmp=countMismatch(s1[0],s2[0],s1Length,i,ans[0],weights);
+	for(int ii = 0; ii <= lastPos; ii++){
+		tmp=countMismatch(s1[0],s2[0],s1Length,ii,ans[0],weights);
 		if(tmp < ans[0]){
 			ans[0]=tmp;
-			ans[1]=i+1;
+			ans[1]=ii+1;
 		}
 	}
 }
 
 void revString(char *string, int nChar){
 	if(nChar<2)return;
-	int i;
+	int ii;
 	char tmp;
-	for(i=0;i<nChar/2;i++){ //using integer division to round down
-		tmp=string[i];
-		string[i]=string[nChar-1-i];
-		string[nChar-1-i]=tmp;
+	for(ii=0;ii<nChar/2;ii++){ //using integer division to round down
+		tmp=string[ii];
+		string[ii]=string[nChar-1-ii];
+		string[nChar-1-ii]=tmp;
 	}
 }
 
 void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, int *append, int *debug, int *isAlign, char **align) {
-	unsigned int i,j;//counters
+	unsigned int ii,jj;//counters
 	unsigned int cost_del = 1;
 	unsigned int cost_ins = 1;
 	const unsigned int cost_sub = 1;
@@ -72,111 +72,109 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 	unsigned int min;
 	unsigned int **array;
 	uint8_t **trace; //bit field: 1=goes down,2=goes right,4=goes diagonal,8=comes from up, 16=comes from left, 32=comes from diagonal, 64=on final path
-	unsigned int appendTracker; //keep track of location for alignment when we're doing ends free
-	unsigned int coords[3],newCoords[2],upCoord,leftCoord; //for tracing back
+	unsigned int coords[3],newCoords[2]; //for tracing back
 	unsigned int d_del,d_ins,d_sub;
 	if(isAlign[0]){
 		//Make giant array
 		array=malloc(sizeof(unsigned int *)*(n1+1));
-		for(i = 0;i<n1+1;i++)array[i]=malloc(sizeof(unsigned int)*(n2+1));
+		for(ii = 0;ii<n1+1;ii++)array[ii]=malloc(sizeof(unsigned int)*(n2+1));
 		//Make traceback array for prettier alignments
 		trace=malloc(sizeof(uint8_t *)*(n1+1));
-		for(i = 0;i<n1+1;i++)trace[i]=malloc(sizeof(uint8_t)*(n2+1));
-		for(i = 0;i<n1+1;i++){
-			for(j = 0;j<n2+1;j++){
-				trace[i][j]=0;
-				if(i==0){
-					if(j!=n2)trace[i][j] |=2;
-					if(j!=0)trace[i][j] |=16;
+		for(ii = 0;ii<n1+1;ii++)trace[ii]=malloc(sizeof(uint8_t)*(n2+1));
+		for(ii = 0;ii<n1+1;ii++){
+			for(jj = 0;jj<n2+1;jj++){
+				trace[ii][jj]=0;
+				if(ii==0){
+					if(jj!=n2)trace[ii][jj] |=2;
+					if(jj!=0)trace[ii][jj] |=16;
 				}
-				if(j==0){
-					if(i!=n1)trace[i][j] |=1;
-					if(i!=0)trace[i][j] |=8;
+				if(jj==0){
+					if(ii!=n1)trace[ii][jj] |=1;
+					if(ii!=0)trace[ii][jj] |=8;
 				}
 			}
 		}
 	}
 
 	if(*homoLimit){
-		for(i = 0; i < n1; i++){
+		for(ii = 0; ii < n1; ii++){
 			cost_del=0;
-			if(i>=*homoLimit){
+			if(ii>=*homoLimit){
 				for(unsigned int step = 1; step <= *homoLimit; step++){
-					//printf("|%c %c|",s1[0][i-1],s1[0][i-1-step]);
-					if(s1[0][i]!=s1[0][i-step]){
+					//printf("|%c %c|",s1[0][ii-1],s1[0][ii-1-step]);
+					if(s1[0][ii]!=s1[0][ii-step]){
 						cost_del = 1;
 						break;
 					}
 				}
 			}else cost_del=1;
-			cost_dels[i]=cost_del;
+			cost_dels[ii]=cost_del;
 		}
-		for(j = 0; j < n2; j++){
+		for(jj = 0; jj < n2; jj++){
 			cost_ins=0;
-			if(j>=*homoLimit){
+			if(jj>=*homoLimit){
 				for(unsigned int step = 1; step <= *homoLimit; step++){
-					if(s2[0][j]!=s2[0][j-step]){
+					if(s2[0][jj]!=s2[0][jj-step]){
 						cost_ins = 1;
 						break;	
 					}
 				}
 			}else cost_ins=1;
-			cost_inss[j]=cost_ins;
+			cost_inss[jj]=cost_ins;
 		}
 	}else{
-		for(i = 0; i < n1; i++) cost_dels[i]=1;
-		for(j = 0; j < n2; j++) cost_inss[j]=1;
+		for(ii = 0; ii < n1; ii++) cost_dels[ii]=1;
+		for(jj = 0; jj < n2; jj++) cost_inss[jj]=1;
 	}
 
 	lastRow[0] = 0;
-	//set first row to 0s if append ok on first string
-	if(prepend[1]) for(j = 1; j <= n2; j++) lastRow[j] = 0;
-	else for(j = 1; j <= n2; j++) lastRow[j] = lastRow[j-1] + cost_inss[j-1];
+	//set first row to 0s if prepend on second string
+	if(prepend[1]) for(jj = 1; jj <= n2; jj++) lastRow[jj] = 0;
+	else for(jj = 1; jj <= n2; jj++) lastRow[jj] = lastRow[jj-1] + cost_inss[jj-1];
 	if(isAlign[0]){
-		for(j=0;j<=n2;j++)array[0][j]=lastRow[j];
+		for(jj=0;jj<=n2;jj++)array[0][jj]=lastRow[jj];
 	}
 	
 	endCol[0]=lastRow[n2];
 
-	//for (int i = 1; i <=n2; ++i) printf(" %d ",q[i]);
-	for(i = 1; i <= n1; i++){
-		cost_del=cost_dels[i-1];
-		//Set first column to 0s if prepend ok on first string
+	for(ii = 1; ii <= n1; ii++){
+		cost_del=cost_dels[ii-1];
+		//Set first column to 0s if prepend on first string
 		if(prepend[0]) thisRow[0] = lastRow[0];
 		else thisRow[0] = lastRow[0] + cost_del;
-		for(j = 1; j <= n2; j++){
-			//printf("S1[%d]:%c S2[%d]:%c\n",i-1,s1[0][i-1],j-1,s2[0][j-1]);
-			cost_ins=cost_inss[j-1];
-			if(i==n1&append[1])cost_ins=0;
-			if(j==n2&append[0])cost_del=0;
-			d_del = lastRow[j] + cost_del;
-			d_ins = thisRow[j-1] + cost_ins;
-			//printf("%d %d",i,j);
-			d_sub = lastRow[j-1] + ( s1[0][i-1] == s2[0][j-1] ? 0 : cost_sub );
-			thisRow[j]=d_ins;
-			if (d_del < thisRow[j])thisRow[j]=d_del;
-			if (d_sub < thisRow[j])thisRow[j]=d_sub;	
+		for(jj = 1; jj <= n2; jj++){
+			//printf("S1[%d]:%c S2[%d]:%c\n",ii-1,s1[0][ii-1],jj-1,s2[0][jj-1]);
+			cost_ins=cost_inss[jj-1];
+			if(ii==n1&append[1])cost_ins=0;
+			if(jj==n2&append[0])cost_del=0;
+			d_del = lastRow[jj] + cost_del;
+			d_ins = thisRow[jj-1] + cost_ins;
+			//printf("%d %d",ii,jj);
+			d_sub = lastRow[jj-1] + ( s1[0][ii-1] == s2[0][jj-1] ? 0 : cost_sub );
+			thisRow[jj]=d_ins;
+			if (d_del < thisRow[jj])thisRow[jj]=d_del;
+			if (d_sub < thisRow[jj])thisRow[jj]=d_sub;	
 			if(isAlign[0]){
-				//printf("%d,%d:%d,%d,%d\n",i,j,d_del==thisRow[j],d_ins==thisRow[j],d_sub==thisRow[j]);
-				if(d_del==thisRow[j]){
-					trace[i-1][j]|= 1;
-					trace[i][j]|=8;
+				//printf("%d,%d:%d,%d,%d\n",ii,jj,d_del==thisRow[jj],d_ins==thisRow[jj],d_sub==thisRow[jj]);
+				if(d_del==thisRow[jj]){
+					trace[ii-1][jj]|= 1;
+					trace[ii][jj]|=8;
 				}
-				if(d_ins==thisRow[j]){
-					trace[i][j-1]|= 2;
-					trace[i][j]|=16;
+				if(d_ins==thisRow[jj]){
+					trace[ii][jj-1]|= 2;
+					trace[ii][jj]|=16;
 				}
-				if(d_sub==thisRow[j]){
-					trace[i-1][j-1]|= 4;
-					trace[i][j]|=32;
+				if(d_sub==thisRow[jj]){
+					trace[ii-1][jj-1]|= 4;
+					trace[ii][jj]|=32;
 				}
 			}
 		}
 		//keep track of the final column for substringing
-		endCol[i]=thisRow[n2];
+		endCol[ii]=thisRow[n2];
 		//store this row if we're aligning (could store directly instead)
 		if(isAlign[0]){
-			for(j=0;j<=n2;j++)array[i][j]=thisRow[j];
+			for(jj=0;jj<=n2;jj++)array[ii][jj]=thisRow[jj];
 		}
 		//Switch the pointers around
 		tmpRow = lastRow;
@@ -193,30 +191,31 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		unsigned int newRightCoord;
 		unsigned int leftCoord=0;
 		unsigned int newLeftCoord;
-		trace[n1][n2] |=64;//last node after appending is on true path
+		trace[n1][n2] |=64;
 		//trace bit field: 1=goes down,2=goes right,4=goes diagonal,8=comes from up, 16=comes from left, 32=comes from diagonal, 64=on final path
-		//mark what nodes are on true path with a 64 in trace[i][j]
-		for(i=n1;i+1>=0+1;i--){//careful about wrapping around here
+		//mark what nodes are on true path with a 64 in trace[ii][jj]
+		for(ii=n1;ii+1>=0+1;ii--){//careful about wrapping around here
 			newRightCoord=0;
 			newLeftCoord=n2;
-			for(j=rightCoord;j+1>=leftCoord+1;j--){//careful about wrapping here
-				if((trace[i][j] & 64)==0)continue;//current node not on true path so continue
-				//printf("%d,%d=%d: %d-%d\n",i,j,trace[i][j]&64,rightCoord,leftCoord);
+			for(jj=rightCoord;jj+1>=leftCoord+1;jj--){//careful about wrapping here
+				if((trace[ii][jj] & 64)==0)continue;//current node not on true path so continue
+				//if(debug*)printf("%d,%d=%d: %d-%d\ bits:%d\n",ii,jj,trace[ii][jj]&64,rightCoord,leftCoord,trace[ii][jj]);
 				//up
-				if(trace[i][j] & 8){
-					if(j>=newRightCoord)newRightCoord=j;
-					if(j<=newLeftCoord)newLeftCoord=j;
-					trace[i-1][j] |= 64;
+				if(trace[ii][jj] & 8){
+					if(jj>=newRightCoord)newRightCoord=jj;
+					if(jj<=newLeftCoord)newLeftCoord=jj;
+					trace[ii-1][jj] |= 64;
 				}
 				//left
-				if(trace[i][j] & 16){
-					trace[i][j-1] |= 64;
+				if(trace[ii][jj] & 16){
+					trace[ii][jj-1] |= 64;
+					if(leftCoord==jj)leftCoord--;
 				}
 				//diagonal
-				if(trace[i][j] & 32){
-					if(j-1>=newRightCoord)newRightCoord=j-1;
-					if(j-1<=newLeftCoord)newLeftCoord=j-1;
-					trace[i-1][j-1] |= 64;
+				if(trace[ii][jj] & 32){
+					if(jj-1>=newRightCoord)newRightCoord=jj-1;
+					if(jj-1<=newLeftCoord)newLeftCoord=jj-1;
+					trace[ii-1][jj-1] |= 64;
 				}
 			}
 			leftCoord=newLeftCoord;
@@ -224,9 +223,9 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		}
 		if(*debug){
 			printf("Trace matrix\n");
-			for(i=0;i<n1+1;i++){
-				for(j=0;j<n2+1;j++){
-					printf("%d ",trace[i][j]);
+			for(ii=0;ii<n1+1;ii++){
+				for(jj=0;jj<n2+1;jj++){
+					printf("%d ",trace[ii][jj]);
 				}
 				printf("\n");
 			}
@@ -273,7 +272,6 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 				align[1][coords[2]]=s2[0][coords[1]];
 			}
 			coords[1]=newCoords[1];
-			//printf("New %d %d left %d up %d coords[2] %d\n",coords[0],coords[1],leftCoord,upCoord,coords[2]);
 			coords[2]++;
 			if(*debug){
 				align[0][coords[2]]='\0';
@@ -283,15 +281,12 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		}
 		align[0][coords[2]]='\0';
 		align[1][coords[2]]='\0';
-		//reverse these strings
-		//revString(align[0],coords[2]);
-		//revString(align[1],coords[2]);
 		if(*debug)printf("%s\n%s\n",align[0],align[1]);
 
 		if(*debug){
-			for(i=0;i<n1+1;i++){
-				for(j=0;j<n2+1;j++){
-					printf("%d ",array[i][j]);
+			for(ii=0;ii<n1+1;ii++){
+				for(jj=0;jj<n2+1;jj++){
+					printf("%d ",array[ii][jj]);
 				}
 				printf("\n");
 			}
@@ -304,9 +299,9 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 	free(cost_dels);
 	free(cost_inss);
 	if(isAlign[0]){
-		for(i = 0;i<n1+1;i++)free(array[i]);
+		for(ii = 0;ii<n1+1;ii++)free(array[ii]);
 		free(array);
-		for(i = 0;i<n1+1;i++)free(trace[i]);
+		for(ii = 0;ii<n1+1;ii++)free(trace[ii]);
 		free(trace);
 	}
 }
@@ -329,19 +324,19 @@ struct levenArgs{
 void *levenAllPar(void *levenArgs){
 	struct levenArgs *args=(struct levenArgs *)levenArgs;
 	if(*args->debug)printf("Thread started. iRange: %d-%d, %d-%d\n",args->iRange[0],args->iRange[1],args->jRange[0],args->jRange[1]);
-	unsigned int i, j;
+	unsigned int ii, jj;
 	int *ansPoint;
-	for(i=args->iRange[0];i<=args->iRange[1];i++){
-		for(j=args->jRange[0];j<=args->jRange[1];j++){
-			ansPoint=&(args->answer[i+args->nStrings[0]*j]);
-			levenAll(ansPoint,&args->s1[i],&args->s2[j],args->homoLimit,args->prepend,args->append,args->debug,args->isAlign,args->align);
+	for(ii=args->iRange[0];ii<=args->iRange[1];ii++){
+		for(jj=args->jRange[0];jj<=args->jRange[1];jj++){
+			ansPoint=&(args->answer[ii+args->nStrings[0]*jj]);
+			levenAll(ansPoint,&args->s1[ii],&args->s2[jj],args->homoLimit,args->prepend,args->append,args->debug,args->isAlign,args->align);
 		}
 	}
 	if(*args->debug)printf("Thread ended. iRange: %d-%d\n",args->iRange[0],args->iRange[1]);
 }
 void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLimit, int *prepend, int *append, int *debug, int *nThread){
-	//just split on i  for now
-	unsigned int i;//counter
+	//just split on ii  for now
+	unsigned int ii;//counter
 	int nextI=0;//count up when dividing strings
 	int nThreads=nThread[0];
 	int stepSize;
@@ -352,25 +347,25 @@ void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLi
 	pthread_t *threads=(pthread_t *)malloc(sizeof(pthread_t)*nThreads);
 	struct levenArgs **args=(struct levenArgs **)malloc(sizeof(struct levenArgs*)*nThreads);
 	if(*debug)printf("Starting %d threads",nThreads);
-	for(i=0;i<nThreads;i++){
-		args[i]=(struct levenArgs *)malloc(sizeof(struct levenArgs));
-		args[i]->answer=answer; args[i]->s1=s1;args[i]->s2=s2;args[i]->homoLimit=homoLimit;args[i]->prepend=prepend;args[i]->append=append;args[i]->debug=debug;args[i]->isAlign=isAlign;args[i]->align=align;args[i]->nStrings=nStrings;
+	for(ii=0;ii<nThreads;ii++){
+		args[ii]=(struct levenArgs *)malloc(sizeof(struct levenArgs));
+		args[ii]->answer=answer; args[ii]->s1=s1;args[ii]->s2=s2;args[ii]->homoLimit=homoLimit;args[ii]->prepend=prepend;args[ii]->append=append;args[ii]->debug=debug;args[ii]->isAlign=isAlign;args[ii]->align=align;args[ii]->nStrings=nStrings;
 		
-		stepSize=(nStrings[0]-nextI)/(nThreads-i); //integer division
-		args[i]->iRange[0]=nextI;
-		args[i]->iRange[1]=nextI+stepSize-1;
-		if(*debug){printf("irange[%d]: %d-%d \n",i,args[i]->iRange[0],args[i]->iRange[1]);}
+		stepSize=(nStrings[0]-nextI)/(nThreads-ii); //integer division
+		args[ii]->iRange[0]=nextI;
+		args[ii]->iRange[1]=nextI+stepSize-1;
+		if(*debug){printf("irange[%d]: %d-%d \n",ii,args[ii]->iRange[0],args[ii]->iRange[1]);}
 		nextI+=stepSize;
-		//not doing anything smart with j now
-		args[i]->jRange[0]=0;
-		args[i]->jRange[1]=nStrings[1]-1;
-		if(pthread_create(&threads[i],NULL,levenAllPar,args[i])){errorMessage("Couldn't create thread",9);}
+		//not doing anything smart with jj now
+		args[ii]->jRange[0]=0;
+		args[ii]->jRange[1]=nStrings[1]-1;
+		if(pthread_create(&threads[ii],NULL,levenAllPar,args[ii])){errorMessage("Couldn't create thread",9);}
 	}
-	for(i=0;i<nThreads;i++){
-		if(pthread_join(threads[i],NULL)){errorMessage("Couldn't join thread",10);}
+	for(ii=0;ii<nThreads;ii++){
+		if(pthread_join(threads[ii],NULL)){errorMessage("Couldn't join thread",10);}
 	}
 
-	for(i=0;i<nThreads;i++)free(args[i]);
+	for(ii=0;ii<nThreads;ii++)free(args[ii]);
 	free(args);
 	free(threads);
 }
