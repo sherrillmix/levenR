@@ -110,10 +110,17 @@ bestMismatch <- function(pattern, subject, pos=findAll, weights=rep(1,nchar(patt
 #'
 #' @param refs The gapped reference sequences (one for each query)
 #' @param aligns The gapped query sequences
+#' @param starts If refs start at different locations add .'s so all start at 1
 #' @return A vector of the aligned strings with gaps added
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 #" @export
-combineAligns<-function(refs,aligns){
+combineAligns<-function(refs,aligns,starts=NULL){
+	if(!is.null(starts)){
+		dotDummy<-paste(rep('.',max(starts)),collapse='')
+		refs<-sprintf('%s%s',substring(dotDummy,1,starts-1),refs)
+		aligns<-sprintf('%s%s',substring(dotDummy,1,starts-1),aligns)
+	}
+
 	out<-rep('',length(aligns))
 
 	#deal with starts by stepping backward from ref
@@ -127,16 +134,19 @@ combineAligns<-function(refs,aligns){
 	#rather inefficient
 	while(any(nchar(refs)>0)){
 		selector<-substring(refs,1,1)=='-'
+		thisBase<-substring(aligns,1,1)
+		thisBase<-ifelse(thisBase=='','.',thisBase)
 		if(any(selector)){
 			out[!selector]<-sprintf('%s%s',out[!selector],'-')
 			refs[selector]<-substring(refs[selector],2)
-			out[selector]<-sprintf('%s%s',out[selector],substring(aligns[selector],1,1))
+			out[selector]<-sprintf('%s%s',out[selector],thisBase[selector])
 			aligns[selector]<-substring(aligns[selector],2)
 		}else{
-			out<-sprintf('%s%s',out,substring(aligns,1,1))
+			out<-sprintf('%s%s',out,thisBase)
 			refs<-substring(refs,2)
 			aligns<-substring(aligns,2)
 		}
+		print(aligns)
 	}
 	return(out)
 }
