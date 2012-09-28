@@ -1,0 +1,4 @@
+# Export all names starting with a letter (not sure why ROxygen isn't taking care of this)
+exportPattern("^[A-Za-z]")
+
+
