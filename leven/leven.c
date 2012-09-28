@@ -55,7 +55,7 @@ void revString(char *string, int nChar){
 	}
 }
 
-void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, int *append, int *debug, int *isAlign, char **align) {
+void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, int *append, int *debug, int *isAlign, char **align1, char **align2) {
 	unsigned int ii,jj;//counters
 	unsigned int cost_del = 1;
 	unsigned int cost_ins = 1;
@@ -261,27 +261,27 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 			if(*debug)printf("%d:%d,%d=>%d,%d",coords[2],coords[0],coords[1],newCoords[0],newCoords[1]);
 			if(newCoords[0]==coords[0]&&coords[1]==newCoords[1])break;
 			if(newCoords[0]==coords[0]){
-				align[0][coords[2]]='-';	
+				align1[0][coords[2]]='-';	
 			}else{
-				align[0][coords[2]]=s1[0][coords[0]];
+				align1[0][coords[2]]=s1[0][coords[0]];
 			}
 			coords[0]=newCoords[0];
 			if(newCoords[1]==coords[1]){
-				align[1][coords[2]]='-';	
+				align2[0][coords[2]]='-';	
 			}else{
-				align[1][coords[2]]=s2[0][coords[1]];
+				align2[0][coords[2]]=s2[0][coords[1]];
 			}
 			coords[1]=newCoords[1];
 			coords[2]++;
 			if(*debug){
-				align[0][coords[2]]='\0';
-				align[1][coords[2]]='\0';
-				printf("%s = %s\n",align[0],align[1]);
+				align1[0][coords[2]]='\0';
+				align2[0][coords[2]]='\0';
+				printf("%s = %s\n",align1[0],align2[0]);
 			}
 		}
-		align[0][coords[2]]='\0';
-		align[1][coords[2]]='\0';
-		if(*debug)printf("%s\n%s\n",align[0],align[1]);
+		align1[0][coords[2]]='\0';
+		align2[0][coords[2]]='\0';
+		if(*debug)printf("%s\n%s\n",align1[0],align2[0]);
 
 		if(*debug){
 			for(ii=0;ii<n1+1;ii++){
@@ -315,7 +315,8 @@ struct levenArgs{
 	int *append;
 	int *debug;
 	int *isAlign;
-	char **align;
+	char **align1;
+	char **align2;
 	int *nStrings;
 	int iRange[2];
 	int jRange[2];
@@ -326,30 +327,31 @@ void *levenAllPar(void *levenArgs){
 	if(*args->debug)printf("Thread started. iRange: %d-%d, %d-%d\n",args->iRange[0],args->iRange[1],args->jRange[0],args->jRange[1]);
 	unsigned int ii, jj;
 	int *ansPoint;
+	char **align1Point, **align2Point;
 	for(ii=args->iRange[0];ii<=args->iRange[1];ii++){
 		for(jj=args->jRange[0];jj<=args->jRange[1];jj++){
 			ansPoint=&(args->answer[ii+args->nStrings[0]*jj]);
-			levenAll(ansPoint,&args->s1[ii],&args->s2[jj],args->homoLimit,args->prepend,args->append,args->debug,args->isAlign,args->align);
+			align1Point=&(args->align1[ii+args->nStrings[0]*jj]);
+			align2Point=&(args->align2[ii+args->nStrings[0]*jj]);
+			levenAll(ansPoint,&args->s1[ii],&args->s2[jj],args->homoLimit,args->prepend,args->append,args->debug,args->isAlign,align1Point,align2Point);
 		}
 	}
 	if(*args->debug)printf("Thread ended. iRange: %d-%d\n",args->iRange[0],args->iRange[1]);
 }
-void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLimit, int *prepend, int *append, int *debug, int *nThread){
+void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLimit, int *prepend, int *append, int *debug, int *nThread, int *isAlign, char **align1,char **align2){
 	//just split on ii  for now
 	unsigned int ii;//counter
 	int nextI=0;//count up when dividing strings
 	int nThreads=nThread[0];
 	int stepSize;
 	if(nStrings[0]<nThreads)nThreads=nStrings[0];
-	int isAlign[1]={0};
-	char **align=NULL;
 	//threads
 	pthread_t *threads=(pthread_t *)malloc(sizeof(pthread_t)*nThreads);
 	struct levenArgs **args=(struct levenArgs **)malloc(sizeof(struct levenArgs*)*nThreads);
 	if(*debug)printf("Starting %d threads",nThreads);
 	for(ii=0;ii<nThreads;ii++){
 		args[ii]=(struct levenArgs *)malloc(sizeof(struct levenArgs));
-		args[ii]->answer=answer; args[ii]->s1=s1;args[ii]->s2=s2;args[ii]->homoLimit=homoLimit;args[ii]->prepend=prepend;args[ii]->append=append;args[ii]->debug=debug;args[ii]->isAlign=isAlign;args[ii]->align=align;args[ii]->nStrings=nStrings;
+		args[ii]->answer=answer; args[ii]->s1=s1;args[ii]->s2=s2;args[ii]->homoLimit=homoLimit;args[ii]->prepend=prepend;args[ii]->append=append;args[ii]->debug=debug;args[ii]->isAlign=isAlign;args[ii]->align1=align1;args[ii]->align2=align2;args[ii]->nStrings=nStrings;
 		
 		stepSize=(nStrings[0]-nextI)/(nThreads-ii); //integer division
 		args[ii]->iRange[0]=nextI;

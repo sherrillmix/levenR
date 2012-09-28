@@ -21,6 +21,7 @@
 #' @examples
 #' library(leven)
 #' leven('ACAC','ACACA')
+#' levenAlign(c('ACCCTG','AACTG'),'ACTG')
 NULL
 
 #' Reverse a string
@@ -146,7 +147,6 @@ combineAligns<-function(refs,aligns,starts=NULL){
 			refs<-substring(refs,2)
 			aligns<-substring(aligns,2)
 		}
-		print(aligns)
 	}
 	return(out)
 }
@@ -156,11 +156,11 @@ combineAligns<-function(refs,aligns,starts=NULL){
 #'
 #' Align strings to a reference string based on Levenshtein distance with ends-free or homopolymer alignments possible
 #'
-#' @param strings The strings to be aligned
+#' @param strings The query strings to be aligned
 #' @param ref The reference to align to
 #' @param homoLimit deletions or insertions in homopolymers > homoLimit cost 0
-#' @param substring1 ends-free for strings1
-#' @param substring2 ends-free for strings2
+#' @param substring1 ends-free for query strings
+#' @param substring2 ends-free for reference
 #' @param prepend 1 or 2 for ends-free on front of string 1 or 2
 #' @param append 1 or 2 for ends-free on back of string 1 or 2
 #' @param trimOuterGaps Trim leading and trailing gaps
@@ -176,7 +176,7 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 	if(substring2){append<-c(append,2);prepend<-c(prepend,2)}
 	append<-1:2 %in% append
 	prepend<-1:2 %in% prepend
-	aligns<-lapply(strings,function(x)levenAll(x,ref,homoLimit=homoLimit,prepend=prepend,append=append,align=TRUE,revComp=revComp,...)[[2]])
+	aligns<-levenAll(strings,ref,homoLimit=homoLimit,prepend=prepend,append=append,align=TRUE,revComp=revComp,...)[[2]]
 	refs<-c(ref,sapply(aligns,'[[',2))
 	aligns<-c(ref,sapply(aligns,'[[',1))
 	out<-combineAligns(refs,aligns)
@@ -188,12 +188,6 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 		out<-substring(out,trimRange[1],trimRange[2])
 	}
 
-	#refGaps<-lapply(gregexpr('-',refs,fixed=TRUE),function(x)x[x!=-1])
-	#uniqueGaps<-sort(unique(unlist(refGaps)))
-	#finalOut<-vector('list',length(strings)+1)
-	#for(i in uniqueGaps){
-		#selector<-sapply(refGaps,function(x)i %in% refGaps)#could optimize here
-	#}
 	out<-list('ref'=out[1],'align'=out[-1])
 	if(trimOuterGaps)attr(out,'start')<-trimRange[1]
 	return(out)
@@ -203,8 +197,8 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 #'
 #' Align and calculate distance betweeen two strings based on Levenshtein distance with ends-free or homopolymer alignments possible (probably not called directly)
 #'
-#' @param string1 A single string 
-#' @param string2 Another single string
+#' @param string1 A single string or vector of strings
+#' @param string2 Another single string or vector of strings
 #' @param homoLimit deletions or insertions in homopolymers > homoLimit cost 0
 #' @param debug Output various debugging information
 #' @param prepend 1 or 2 for ends-free on front of string 1 or 2
@@ -217,7 +211,6 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 #" @export
 levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,append=NULL,revComp=FALSE,align=FALSE,nThreads=1) {
-	if(align&nThreads>1)stop(simpleError('Parallel and align not compatible yet'))
 	if(is.null(prepend))prepend<-c(FALSE,FALSE)
 	if(is.null(append))append<-c(FALSE,FALSE)
 	if(length(append)!=2&length(prepend!=2))stop(simpleError('Specify prepend and append as a vector of two logicals'))
@@ -229,30 +222,30 @@ levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,appen
 
 	if(any(is.na(string1))|any(is.na(string2)))stop(simpleError('NULL or NA string in levenAll'))
 
-	if(nThreads==1){
-		#make sure we're only dealing with 1 string each
-		string1<-string1[1];string2<-string2[1]
-		out<--99
-		#don't forget to deal with runs
-		if(align){
-			n1<-nchar(string1)
-			n2<-nchar(string2)
-			isAlign<-1
-			outStrings<-rep(paste(rep('Z',2*(n1+n2)),collapse=''),2)
-		}else{
-			isAlign<-0
-			outStrings<-c('','')
-		}
-		ans<-lapply(runs,function(x).C('levenAll',as.integer(out),as.character(if(x[5]) revComp(string1) else string1),as.character(string2),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug),as.integer(isAlign),as.character(outStrings),PACKAGE='leven')[c(1,9)])
-		selector<-which.min(sapply(ans,'[[',1))
-		if(!align)output<-ans[[selector]][[1]]
-		else output<-ans[[selector]]
+	if(align){
+		n1<-nchar(string1)
+		n2<-nchar(string2)
+		isAlign<-1
+		align1<-as.vector(outer(n1,n2,FUN=function(xx,yy)mapply(function(x,y)paste(rep('Z',2*(x+y)),collapse=''),xx,yy)))
+		align2<-as.vector(outer(n1,n2,FUN=function(xx,yy)mapply(function(x,y)paste(rep('Z',2*(x+y)),collapse=''),xx,yy)))
 	}else{
-		out<-rep(-99,length(string1)*length(string2))
-		nStrings<-c(length(string1),length(string2))
-		ans<-do.call(rbind,lapply(runs,function(x).C('parallelLeven',as.integer(out),as.character(string1),as.character(string2),as.integer(nStrings),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug),as.integer(nThreads),PACKAGE='leven')[[1]]))
-		ans<-apply(ans,2,min)
-		output<-matrix(ans,nrow=nStrings[1],ncol=nStrings[2])
+		isAlign<-0
+		align1<-rep('',length(string1)*length(string2))
+		align2<-rep('',length(string1)*length(string2))
+	}
+	out<-rep(-99,length(string1)*length(string2))
+	nStrings<-c(length(string1),length(string2))
+	ans<-lapply(runs,function(x).C('parallelLeven',as.integer(out),as.character(if(x[5]) revComp(string1) else string1),as.character(string2),as.integer(nStrings),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug),as.integer(nThreads),as.integer(isAlign),as.character(align1),as.character(align2),PACKAGE='leven')[c(1,11,12)])
+	dists<-do.call(rbind,lapply(ans,'[[',1))
+	minDists<-apply(dists,2,min)
+	if(!align){
+		output<-matrix(minDists,nrow=nStrings[1],ncol=nStrings[2])
+	}else{
+		aligns<-lapply(ans,'[',2:3)
+		selects<-apply(dists,2,which.min)
+		#pull out the appropriate alignments
+		bestAligns<-mapply(function(x,y)c(aligns[[y]][[1]][x],aligns[[y]][[2]][x]),1:length(selects),selects,SIMPLIFY=FALSE)
+		output<-list('dist'=minDists,'align'=bestAligns)
 	}
 		
 	return(output)
