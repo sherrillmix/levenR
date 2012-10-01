@@ -16,6 +16,9 @@ ${fileName}:
 	@echo Copying C
 	mkdir ${fileName}/src
 	cp *.c ${fileName}/src
+	@echo Copying tests
+	mkdir ${fileName}/tests
+	cp *[tT]est*.R ${fileName}/tests
 	#rmdir ${fileName}/inst/doc ${fileName}/inst
 	rmdir ${fileName}/inst
 	#no idea why roxygen doesn't take care of this

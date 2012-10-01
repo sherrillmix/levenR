@@ -18,6 +18,53 @@
 	#define warningMessage(A) printf(A)
 #endif
 
+void combineAligns(char **queries, char **refs, char **out, int *nReadsIn, int *readLengths,int *maxOutLengthIn){
+	int nReads=nReadsIn[0];
+	int maxOutLength=maxOutLengthIn[0];
+	int *readIndexes= malloc(sizeof(int)*(nReads));
+	int outIndex=0;
+	int maxRemaining=0;
+	int ii;
+	int anyGap=0;
+	char thisBase;
+	//get ready
+	for(ii=0;ii<nReads;ii++){
+		//find max
+		if(maxRemaining<readLengths[ii])maxRemaining=readLengths[ii];
+		//point pointers to start of read
+		readIndexes[ii]=0;
+	}
+	while(maxRemaining>0){
+		maxRemaining=0;
+		anyGap=0;
+		for(ii=0;ii<nReads;ii++){
+			if(readIndexes[ii]<readLengths[ii]&&refs[ii][readIndexes[ii]]=='-'){
+				anyGap=1;
+				break;
+			}
+		}
+		for(ii=0;ii<nReads;ii++){
+			if(readIndexes[ii]>=readLengths[ii]){
+				thisBase='-';
+			}else if(!anyGap || refs[ii][readIndexes[ii]]=='-'){
+				thisBase=queries[ii][readIndexes[ii]];
+				readIndexes[ii]++;
+			}else{
+				thisBase='-';
+			}
+			out[ii][outIndex]=thisBase;
+			if(maxRemaining<readLengths[ii]-readIndexes[ii])maxRemaining=readLengths[ii]-readIndexes[ii];
+		}
+		outIndex++;
+		if(outIndex>maxOutLength){errorMessage("Out read length longer than anticipated. Adjust C code",11);}
+	}
+	//wrap up
+	for(ii=0;ii<nReads;ii++){
+		out[ii][outIndex]='\0';
+	}
+
+	free(readIndexes);
+}
 
 int countMismatch(char *s1, char *s2, int length, int s2Offset, int cutoff, int *weights) {
 	int answer=0;

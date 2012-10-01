@@ -116,39 +116,22 @@ bestMismatch <- function(pattern, subject, pos=findAll, weights=rep(1,nchar(patt
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 #" @export
 combineAligns<-function(refs,aligns,starts=NULL){
+	nReads<-length(refs)
+	if(nReads!=length(aligns))stop(simpleError('Length of refs and queries not same for aligning'))
 	if(!is.null(starts)){
-		dotDummy<-paste(rep('.',max(starts)),collapse='')
+		dotDummy<-paste(rep('-',max(starts)),collapse='')
 		refs<-sprintf('%s%s',substring(dotDummy,1,starts-1),refs)
 		aligns<-sprintf('%s%s',substring(dotDummy,1,starts-1),aligns)
 	}
 
 	out<-rep('',length(aligns))
 
-	#deal with starts by stepping backward from ref
-	lastGap<-regexpr('[^-*]',refs)-1
-	maxGap<-max(lastGap)
-	dummy<-paste(rep('-',maxGap),collapse='')
-	out<-sprintf('%s%s%s',out,substring(dummy,1,maxGap-lastGap),substring(aligns,1,lastGap))
-	aligns<-substring(aligns,lastGap+1)
-	refs<-substring(refs,lastGap+1)
+	readLengths<-nchar(refs)
+	maxOutLength<-min(sum(nchar(gsub('[^-]','',refs,perl=TRUE)))+nchar(gsub('[-.]+','',refs[1])),4*max(readLengths))
+	out<-rep(paste(rep('Z',maxOutLength),collapse=''),nReads)
 
-	#rather inefficient
-	while(any(nchar(refs)>0)){
-		selector<-substring(refs,1,1)=='-'
-		thisBase<-substring(aligns,1,1)
-		thisBase<-ifelse(thisBase=='','.',thisBase)
-		if(any(selector)){
-			out[!selector]<-sprintf('%s%s',out[!selector],'-')
-			refs[selector]<-substring(refs[selector],2)
-			out[selector]<-sprintf('%s%s',out[selector],thisBase[selector])
-			aligns[selector]<-substring(aligns[selector],2)
-		}else{
-			out<-sprintf('%s%s',out,thisBase)
-			refs<-substring(refs,2)
-			aligns<-substring(aligns,2)
-		}
-	}
-	return(out)
+	ans<-.C('combineAligns',as.character(aligns),as.character(refs),as.character(out),as.integer(nReads),as.integer(readLengths),as.integer(maxOutLength),PACKAGE='leven')[[3]]
+	return(ans)
 }
 
 
@@ -211,6 +194,7 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 #" @export
 levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,append=NULL,revComp=FALSE,align=FALSE,nThreads=1) {
+	if(is.null(string1)||is.null(string2))stop(simpleError('Null vectors received for alignment'))
 	if(is.null(prepend))prepend<-c(FALSE,FALSE)
 	if(is.null(append))append<-c(FALSE,FALSE)
 	if(length(append)!=2&length(prepend!=2))stop(simpleError('Specify prepend and append as a vector of two logicals'))
@@ -220,7 +204,7 @@ levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,appen
 	if(revComp)runs<-c(lapply(runs,function(x)c(x,FALSE)),lapply(runs,function(x)c(x,TRUE)))
 	else runs<-lapply(runs,function(x)c(x,FALSE))
 
-	if(any(is.na(string1))|any(is.na(string2)))stop(simpleError('NULL or NA string in levenAll'))
+	if(any(is.na(string1))||any(is.na(string2)))stop(simpleError('NA string in levenAll'))
 
 	if(align){
 		n1<-nchar(string1)
