@@ -292,12 +292,12 @@ leven<-function(strings1,strings2=NULL,oneToOne=FALSE,homoLimit=0,vocal=0,debug=
 
 
 .onLoad<-function(lib, pkg){
-	library.dynam("leven", pkg, lib)
+	library.dynam("levenR", pkg, lib)
 }
 
 
 .onUnload<-function(path){
-	library.dynam.unload("leven", path)
+	library.dynam.unload("levenR", path)
 }
 
 
