@@ -13,9 +13,11 @@
 	#include <R.h>
 	#define errorMessage(A,B) error(A)
 	#define warningMessage(A) warning(A)
+	#define printMessage(...) Rprintf(__VA_ARGS__)
 #else
 	#define errorMessage(A,B) printf(A);exit(B)
 	#define warningMessage(A) printf(A)
+	#define printMessage(...) printf(__VA_ARGS__)
 #endif
 
 void combineAligns(char **queries, char **refs, char **out, int *nReadsIn, int *readLengths,int *maxOutLengthIn){
@@ -109,7 +111,7 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 	const unsigned int cost_sub = 1;
 	unsigned int n1 = strlen(s1[0]);
 	unsigned int n2 = strlen(s2[0]);
-	//printf("%d %d\n",n1,n2);
+	//printMessage("%d %d\n",n1,n2);
 	unsigned int* endCol = malloc(sizeof(unsigned int)*(n1+1));
 	unsigned int* lastRow = malloc(sizeof(unsigned int)*(n2+1));
 	unsigned int* thisRow = malloc(sizeof(unsigned int)*(n2+1));
@@ -148,7 +150,7 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 			cost_del=0;
 			if(ii>=*homoLimit){
 				for(unsigned int step = 1; step <= *homoLimit; step++){
-					//printf("|%c %c|",s1[0][ii-1],s1[0][ii-1-step]);
+					//printMessage("|%c %c|",s1[0][ii-1],s1[0][ii-1-step]);
 					if(s1[0][ii]!=s1[0][ii-step]){
 						cost_del = 1;
 						break;
@@ -190,19 +192,19 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		if(prepend[0]) thisRow[0] = lastRow[0];
 		else thisRow[0] = lastRow[0] + cost_del;
 		for(jj = 1; jj <= n2; jj++){
-			//printf("S1[%d]:%c S2[%d]:%c\n",ii-1,s1[0][ii-1],jj-1,s2[0][jj-1]);
+			//printMessage("S1[%d]:%c S2[%d]:%c\n",ii-1,s1[0][ii-1],jj-1,s2[0][jj-1]);
 			cost_ins=cost_inss[jj-1];
 			if(ii==n1&append[1])cost_ins=0;
 			if(jj==n2&append[0])cost_del=0;
 			d_del = lastRow[jj] + cost_del;
 			d_ins = thisRow[jj-1] + cost_ins;
-			//printf("%d %d",ii,jj);
+			//printMessage("%d %d",ii,jj);
 			d_sub = lastRow[jj-1] + ( s1[0][ii-1] == s2[0][jj-1] ? 0 : cost_sub );
 			thisRow[jj]=d_ins;
 			if (d_del < thisRow[jj])thisRow[jj]=d_del;
 			if (d_sub < thisRow[jj])thisRow[jj]=d_sub;	
 			if(isAlign[0]){
-				//printf("%d,%d:%d,%d,%d\n",ii,jj,d_del==thisRow[jj],d_ins==thisRow[jj],d_sub==thisRow[jj]);
+				//printMessage("%d,%d:%d,%d,%d\n",ii,jj,d_del==thisRow[jj],d_ins==thisRow[jj],d_sub==thisRow[jj]);
 				if(d_del==thisRow[jj]){
 					trace[ii-1][jj]|= 1;
 					trace[ii][jj]|=8;
@@ -227,9 +229,9 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 		tmpRow = lastRow;
 		lastRow = thisRow;
 		thisRow = tmpRow;
-		if(*debug){for(int printer = 0; printer <=n2; ++printer) printf("%d ",thisRow[printer]); printf("\n");}
+		if(*debug){for(int printer = 0; printer <=n2; ++printer) printMessage("%d ",thisRow[printer]); printMessage("\n");}
 	}
-	if(*debug){for(int printer = 0; printer <=n2; ++printer) printf("%d ",lastRow[printer]); printf("\n");}
+	if(*debug){for(int printer = 0; printer <=n2; ++printer) printMessage("%d ",lastRow[printer]); printMessage("\n");}
 	*answer = lastRow[n2];
 	if(isAlign[0]){
 		//traceback to start storing valid paths, then descend following lowest values preferring diagonals
@@ -246,7 +248,7 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 			newLeftCoord=n2;
 			for(jj=rightCoord;jj+1>=leftCoord+1;jj--){//careful about wrapping here
 				if((trace[ii][jj] & 64)==0)continue;//current node not on true path so continue
-				//if(debug*)printf("%d,%d=%d: %d-%d\ bits:%d\n",ii,jj,trace[ii][jj]&64,rightCoord,leftCoord,trace[ii][jj]);
+				//if(debug*)printMessage("%d,%d=%d: %d-%d\ bits:%d\n",ii,jj,trace[ii][jj]&64,rightCoord,leftCoord,trace[ii][jj]);
 				//up
 				if(trace[ii][jj] & 8){
 					if(jj>=newRightCoord)newRightCoord=jj;
@@ -269,12 +271,12 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 			rightCoord=newRightCoord;
 		}
 		if(*debug){
-			printf("Trace matrix\n");
+			printMessage("Trace matrix\n");
 			for(ii=0;ii<n1+1;ii++){
 				for(jj=0;jj<n2+1;jj++){
-					printf("%d ",trace[ii][jj]);
+					printMessage("%d ",trace[ii][jj]);
 				}
-				printf("\n");
+				printMessage("\n");
 			}
 		}
 		//walk down trace from top left to bottom right
@@ -305,7 +307,7 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 				newCoords[0]=coords[0];
 				newCoords[1]=coords[1]+1;
 			}
-			if(*debug)printf("%d:%d,%d=>%d,%d",coords[2],coords[0],coords[1],newCoords[0],newCoords[1]);
+			if(*debug)printMessage("%d:%d,%d=>%d,%d",coords[2],coords[0],coords[1],newCoords[0],newCoords[1]);
 			if(newCoords[0]==coords[0]&&coords[1]==newCoords[1])break;
 			if(newCoords[0]==coords[0]){
 				align1[0][coords[2]]='-';	
@@ -323,23 +325,23 @@ void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, i
 			if(*debug){
 				align1[0][coords[2]]='\0';
 				align2[0][coords[2]]='\0';
-				printf("%s = %s\n",align1[0],align2[0]);
+				printMessage("%s = %s\n",align1[0],align2[0]);
 			}
 		}
 		align1[0][coords[2]]='\0';
 		align2[0][coords[2]]='\0';
-		if(*debug)printf("%s\n%s\n",align1[0],align2[0]);
+		if(*debug)printMessage("%s\n%s\n",align1[0],align2[0]);
 
 		if(*debug){
 			for(ii=0;ii<n1+1;ii++){
 				for(jj=0;jj<n2+1;jj++){
-					printf("%d ",array[ii][jj]);
+					printMessage("%d ",array[ii][jj]);
 				}
-				printf("\n");
+				printMessage("\n");
 			}
 		}
 	}
-	//printf(" %d ",*answer);
+	//printMessage(" %d ",*answer);
 	free(endCol);
 	free(lastRow);
 	free(thisRow);
@@ -371,7 +373,7 @@ struct levenArgs{
 
 void *levenAllPar(void *levenArgs){
 	struct levenArgs *args=(struct levenArgs *)levenArgs;
-	if(*args->debug)printf("Thread started. iRange: %d-%d, %d-%d\n",args->iRange[0],args->iRange[1],args->jRange[0],args->jRange[1]);
+	if(*args->debug)printMessage("Thread started. iRange: %d-%d, %d-%d\n",args->iRange[0],args->iRange[1],args->jRange[0],args->jRange[1]);
 	unsigned int ii, jj;
 	int *ansPoint;
 	char **align1Point, **align2Point;
@@ -383,7 +385,7 @@ void *levenAllPar(void *levenArgs){
 			levenAll(ansPoint,&args->s1[ii],&args->s2[jj],args->homoLimit,args->prepend,args->append,args->debug,args->isAlign,align1Point,align2Point);
 		}
 	}
-	if(*args->debug)printf("Thread ended. iRange: %d-%d\n",args->iRange[0],args->iRange[1]);
+	if(*args->debug)printMessage("Thread ended. iRange: %d-%d\n",args->iRange[0],args->iRange[1]);
 }
 void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLimit, int *prepend, int *append, int *debug, int *nThread, int *isAlign, char **align1,char **align2){
 	//just split on ii  for now
@@ -395,7 +397,7 @@ void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLi
 	//threads
 	pthread_t *threads=(pthread_t *)malloc(sizeof(pthread_t)*nThreads);
 	struct levenArgs **args=(struct levenArgs **)malloc(sizeof(struct levenArgs*)*nThreads);
-	if(*debug)printf("Starting %d threads",nThreads);
+	if(*debug)printMessage("Starting %d threads",nThreads);
 	for(ii=0;ii<nThreads;ii++){
 		args[ii]=(struct levenArgs *)malloc(sizeof(struct levenArgs));
 		args[ii]->answer=answer; args[ii]->s1=s1;args[ii]->s2=s2;args[ii]->homoLimit=homoLimit;args[ii]->prepend=prepend;args[ii]->append=append;args[ii]->debug=debug;args[ii]->isAlign=isAlign;args[ii]->align1=align1;args[ii]->align2=align2;args[ii]->nStrings=nStrings;
@@ -403,7 +405,7 @@ void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLi
 		stepSize=(nStrings[0]-nextI)/(nThreads-ii); //integer division
 		args[ii]->iRange[0]=nextI;
 		args[ii]->iRange[1]=nextI+stepSize-1;
-		if(*debug){printf("irange[%d]: %d-%d \n",ii,args[ii]->iRange[0],args[ii]->iRange[1]);}
+		if(*debug){printMessage("irange[%d]: %d-%d \n",ii,args[ii]->iRange[0],args[ii]->iRange[1]);}
 		nextI+=stepSize;
 		//not doing anything smart with jj now
 		args[ii]->jRange[0]=0;
