@@ -7,3 +7,4 @@ LazyLoad: yes
 Author: Scott Sherrill-Mix
 Description: Simple Levenshtein alignment and distance calculation with ends-free and reduced homopolymer gap costs
 Version: 0.1.7
+Date: 2015-10-01
