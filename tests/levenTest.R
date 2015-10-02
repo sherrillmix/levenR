@@ -1,9 +1,4 @@
-##File name: levenTest.R
-##Creation date: Oct 01, 2012
-##Last modified: Mon Oct 01, 2012  10:00AM
-##Created by: scott
-##Summary: Test leven functions 
-library(leven)
+library(levenR)
 if(leven('AAA','AAA')!=0)stop(simpleError('Equal strings not equal'))
 if(leven('AT','A')!=1)stop(simpleError('Difference between AT and A not 1'))
 if(leven('A','AT')!=1)stop(simpleError('Difference between A and AT not 1'))
