@@ -1,10 +1,10 @@
 Package: levenR
 Maintainer: Scott Sherrill-Mix <R@sherrillmix.com>
-License: CC BY-NC 3.0
+License: GPL-2
 Title: Simple Levenshtein alignment and distance calculation
 Type: Package
 LazyLoad: yes
 Author: Scott Sherrill-Mix
 Description: A few functions for simple Levenshtein alignment and distance calculation with multiple threads, ends-free and reduced homopolymer gap costs.
 Version: 0.2.0
-Date: 2015-10-01
+Date: 2015-10-02

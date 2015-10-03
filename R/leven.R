@@ -1,7 +1,7 @@
 #' Simple Levenshtein alignments
 #'
 #' \tabular{ll}{
-#' Package: \tab leven\cr
+#' Package: \tab levenR\cr
 #' Type: \tab Package\cr
 #' Version: \tab 0.1\cr
 #' Date: \tab 2011-11-16\cr
@@ -9,7 +9,7 @@
 #' LazyLoad: \tab yes\cr
 #' }
 #' 
-#' @name leven-package
+#' @name levenR-package
 #' @aliases levenstein
 #' @docType package
 #' @title Simple Levenshtein alignments
@@ -19,7 +19,7 @@
 #' @keywords alignment, string, distance, levenshtein
 #' @seealso \code{Biostrings}
 #' @examples
-#' library(leven)
+#' library(levenR)
 #' leven('ACAC','ACACA')
 #' levenAlign(c('ACCCTG','AACTG'),'ACTG')
 NULL
@@ -88,7 +88,7 @@ multiMismatch<-function(patterns, subject,drop=TRUE,...){
 bestMismatch <- function(pattern, subject, pos=findAll, weights=rep(1,nchar(pattern)),findAll=FALSE,dummyChar='|'){
 	if(nchar(pattern)>nchar(subject))stop(simpleError('Pattern longer than subject'))
 	if(nchar(pattern)!=length(weights))stop(simpleError('Weights and pattern length do not match'))
-	ans<-.C('bestMismatch',as.integer(c(-1,-1)),as.character(pattern),as.character(subject),as.integer(weights),PACKAGE='leven')[[1]]
+	ans<-.C('bestMismatch',as.integer(c(-1,-1)),as.character(pattern),as.character(subject),as.integer(weights),PACKAGE='levenR')[[1]]
 	if(any(ans<0))stop(simpleError('Something did not work in mismatch'))
 	stillLooking<-TRUE;nextMatch<-out<-ans
 	if(findAll){
@@ -130,7 +130,7 @@ combineAligns<-function(refs,aligns,starts=NULL){
 	maxOutLength<-min(sum(nchar(gsub('[^-]','',refs,perl=TRUE)))+nchar(gsub('[-.]+','',refs[1])),4*max(readLengths))
 	out<-rep(paste(rep('Z',maxOutLength),collapse=''),nReads)
 
-	ans<-.C('combineAligns',as.character(aligns),as.character(refs),as.character(out),as.integer(nReads),as.integer(readLengths),as.integer(maxOutLength),PACKAGE='leven')[[3]]
+	ans<-.C('combineAligns',as.character(aligns),as.character(refs),as.character(out),as.integer(nReads),as.integer(readLengths),as.integer(maxOutLength),PACKAGE='levenR')[[3]]
 	return(ans)
 }
 
@@ -219,7 +219,7 @@ levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,appen
 	}
 	out<-rep(-99,length(string1)*length(string2))
 	nStrings<-c(length(string1),length(string2))
-	ans<-lapply(runs,function(x).C('parallelLeven',as.integer(out),as.character(if(x[5]) revComp(string1) else string1),as.character(string2),as.integer(nStrings),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug),as.integer(nThreads),as.integer(isAlign),as.character(align1),as.character(align2),PACKAGE='leven')[c(1,11,12)])
+	ans<-lapply(runs,function(x).C('parallelLeven',as.integer(out),as.character(if(x[5]) revComp(string1) else string1),as.character(string2),as.integer(nStrings),as.integer(homoLimit),as.integer(x[1:2]),as.integer(x[3:4]),as.integer(debug),as.integer(nThreads),as.integer(isAlign),as.character(align1),as.character(align2),PACKAGE='levenR')[c(1,11,12)])
 	dists<-do.call(rbind,lapply(ans,'[[',1))
 	minDists<-apply(dists,2,min)
 	if(!align){
