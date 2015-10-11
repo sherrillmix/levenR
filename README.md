@@ -15,7 +15,7 @@ devtools::install_github("sherrillmix/levenR")
 
 ### Basic Levenshtein distance
 
-We use the provided function `offsetX` to generate the x-offsets for plotting.
+A simple example of calculating the Levenshtein distance between several strings to make a distance matrix:
 
 ```r
 library(levenR)
