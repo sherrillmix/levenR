@@ -6,8 +6,7 @@
 
 ## Installation
 
-
-```r
+```{r, eval=FALSE}
 devtools::install_github("sherrillmix/levenR")
 ```
 
@@ -16,18 +15,9 @@ devtools::install_github("sherrillmix/levenR")
 ### Basic Levenshtein distance
 
 We use the provided function `offsetX` to generate the x-offsets for plotting.
-
-```r
+```{r base-examples, tidy=FALSE}
 library(levenR)
 seqs<-c('AAATA','AATA','AAAT','ACCTA')
 leven(seqs)
-```
-
-```
-##      [,1] [,2] [,3] [,4]
-## [1,]    0    1    1    2
-## [2,]    1    0    2    2
-## [3,]    1    2    0    3
-## [4,]    2    2    3    0
 ```
 
