@@ -42,6 +42,24 @@ dist<-leven(seqs,refs,substring2=TRUE)
 apply(dist,1,which.min)
 ```
 
+### Ignoring indels in homopolymers
+An example of calculating the Levenshtein distance between several strings to make a distance matrix while ignoring indels in long homopolymers (an error type common in 454 and IonTorrent sequencing):
+```{r levenHomo, tidy=TRUE}
+library(levenR)
+seqs<-c('AAAAATA','AAATTTTTA','AAAAATTTA')
+leven(seqs,homoLimit=3)
+```
+
+### Using multiple threads 
+An example of calculating the Levenshtein distance between several strings using multiple threads:
+```{r levenThreads, tidy=TRUE}
+library(levenR)
+seqs<-replicate(50,paste(sample(letters,100,TRUE),collapse=''))
+system.time(leven(seqs))
+system.time(leven(seqs,nThreads=4))
+```
+
+
 ### Alignment
 
 An example of aligning strings against a longer reference:
