@@ -12,12 +12,45 @@ devtools::install_github("sherrillmix/levenR")
 
 ## Examples
 
-### Basic Levenshtein distance
+### Generate Levenshtein distance matrix
 
-A simple example of calculating the Levenshtein distance between several strings to make a distance matrix:
-```{r base-examples, tidy=FALSE}
+An example of calculating the Levenshtein distance between several strings to make a distance matrix:
+```{r levenMatrix, tidy=TRUE}
 library(levenR)
 seqs<-c('AAATA','AATA','AAAT','ACCTA')
 leven(seqs)
 ```
+
+### Compare many to one
+
+An example of calculating the Levenshtein distance between several strings against a longer reference sequence:
+```{r levenRef, tidy=TRUE}
+library(levenR)
+seqs<-c('AAATA','AATA','AAAT','ACCTA')
+ref<-'CCAAATACCGACC'
+leven(seqs,ref,substring2=TRUE)
+```
+
+### Find the best reference
+
+An example of calculating the Levenshtein distance between several strings against two longer reference sequences and determining the best match for each read:
+```{r bestRef, tidy=TRUE}
+library(levenR)
+seqs<-c('AAATA','AATA','AAAT','ACCTA')
+refs<-c('CCATAATACCGACC','GGAAATACCTA')
+dist<-leven(seqs,refs,substring2=TRUE)
+apply(dist,1,which.min)
+```
+
+### Alignment
+
+An example of aligning strings against a longer reference:
+```{r align, tidy=TRUE}
+library(levenR)
+seqs<-c('AAATA','AATA','AAAT','ACCTA')
+ref<-'CCAAATACCGACC'
+levenAlign(seqs,ref,substring2=TRUE)
+```
+
+
 
