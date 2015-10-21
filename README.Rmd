@@ -1,0 +1,74 @@
+# Calculate Levenshtein distance between strings
+
+## Introduction
+
+`violinPointR` provides a few functions for simple Levenshtein alignment and distance calculation with multiple threads, ends-free and reduced homopolymer gap costs.
+
+## Installation
+
+```{r, eval=FALSE}
+devtools::install_github("sherrillmix/levenR")
+```
+
+## Examples
+
+### Generate Levenshtein distance matrix
+
+An example of calculating the Levenshtein distance between several strings to make a distance matrix:
+```{r levenMatrix, tidy=TRUE}
+library(levenR)
+seqs<-c('AAATA','AATA','AAAT','ACCTA')
+leven(seqs)
+```
+
+### Compare many to one
+
+An example of calculating the Levenshtein distance between several strings against a longer reference sequence:
+```{r levenRef, tidy=TRUE}
+library(levenR)
+seqs<-c('AAATA','AATA','AAAT','ACCTA')
+ref<-'CCAAATACCGACC'
+leven(seqs,ref,substring2=TRUE)
+```
+
+### Find the best reference
+
+An example of calculating the Levenshtein distance between several strings against two longer reference sequences and determining the best match for each read:
+```{r bestRef, tidy=TRUE}
+library(levenR)
+seqs<-c('AAATA','AATA','AAAT','ACCTA')
+refs<-c('CCATAATACCGACC','GGAAATACCTA')
+dist<-leven(seqs,refs,substring2=TRUE)
+apply(dist,1,which.min)
+```
+
+### Ignoring indels in homopolymers
+An example of calculating the Levenshtein distance between several strings to make a distance matrix while ignoring indels in long homopolymers (an error type common in 454 and IonTorrent sequencing):
+```{r levenHomo, tidy=TRUE}
+library(levenR)
+seqs<-c('AAAAATA','AAATTTTTA','AAAAATTTA')
+leven(seqs,homoLimit=3)
+```
+
+### Using multiple threads 
+An example of calculating the Levenshtein distance between several strings using multiple threads:
+```{r levenThreads, tidy=TRUE}
+library(levenR)
+seqs<-replicate(50,paste(sample(letters,100,TRUE),collapse=''))
+system.time(leven(seqs))
+system.time(leven(seqs,nThreads=4))
+```
+
+
+### Alignment
+
+An example of aligning strings against a longer reference:
+```{r align, tidy=TRUE}
+library(levenR)
+seqs<-c('AAATA','AATA','AAAT','ACCTA')
+ref<-'CCAAATACCGACC'
+levenAlign(seqs,ref,substring2=TRUE)
+```
+
+
+
