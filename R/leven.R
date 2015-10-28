@@ -119,7 +119,7 @@ combineAligns<-function(refs,aligns,starts=NULL){
 	nReads<-length(refs)
 	if(nReads!=length(aligns))stop(simpleError('Length of refs and queries not same for aligning'))
 	if(!is.null(starts)){
-		dotDummy<-paste(rep('-',max(starts)),collapse='')
+		dotDummy<-paste(rep('.',max(starts)),collapse='')
 		refs<-sprintf('%s%s',substring(dotDummy,1,starts-1),refs)
 		aligns<-sprintf('%s%s',substring(dotDummy,1,starts-1),aligns)
 	}
@@ -288,16 +288,6 @@ leven<-function(strings1,strings2=NULL,oneToOne=FALSE,homoLimit=0,vocal=0,debug=
 		}
 	}
 	return(distMat)
-}
-
-
-.onLoad<-function(lib, pkg){
-	library.dynam("levenR", pkg, lib)
-}
-
-
-.onUnload<-function(path){
-	library.dynam.unload("levenR", path)
 }
 
 
