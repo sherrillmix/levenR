@@ -95,17 +95,6 @@ void bestMismatch(int *ans, char **s1, char **s2, int *weights){
 	}
 }
 
-void revString(char *string, int nChar){
-	if(nChar<2)return;
-	int ii;
-	char tmp;
-	for(ii=0;ii<nChar/2;ii++){ //using integer division to round down
-		tmp=string[ii];
-		string[ii]=string[nChar-1-ii];
-		string[nChar-1-ii]=tmp;
-	}
-}
-
 void levenAll(int *answer, char **s1, char **s2, int *homoLimit, int *prepend, int *append, int *debug, int *isAlign, char **align1, char **align2) {
 	unsigned int ii,jj;//counters
 	unsigned int cost_del = 1;
