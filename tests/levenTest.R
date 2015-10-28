@@ -33,3 +33,7 @@ if(any(leven(c('AAAA','ATAA','AAATA','XXX'))!=leven(c('AAAA','ATAA','AAATA','XXX
   if(any(bestMismatch('AA','AAG',pos=TRUE)!=c(0,1)))stop(simpleError('bestMismatch position finding incorrect'))
   if(any(bestMismatch('AA','TTAAG',pos=TRUE)!=c(0,3)))stop(simpleError('bestMismatch position finding incorrect'))
   if(any(bestMismatch('AA','TTAAGAA',pos=TRUE,findAll=TRUE)!=matrix(c(0,0,3,6),nrow=2)))stop(simpleError('bestMismatch position finding incorrect'))
+  if(any(multiMismatch('AA','TTAAGAA')!=c(0,3,1)))stop(simpleError('multiMismatch position finding incorrect'))
+  if(any(multiMismatch(c('TT','AA'),'TTAAGAA')!=c(0,1,1)))stop(simpleError('multiMismatch position finding incorrect'))
+  if(any(multiMismatch(c('TT','AA'),'TTAAGAA',drop=FALSE)[,'pos']!=c(1,3)))stop(simpleError('multiMismatch position finding incorrect'))
+  if(any(multiMismatch(c('TT','AA'),'TTAAGAA',drop=FALSE,findAll=TRUE)[,'pos']!=c(1,3,6)))stop(simpleError('multiMismatch position finding incorrect'))
