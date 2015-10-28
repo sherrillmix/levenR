@@ -8,6 +8,9 @@ all: ../$(PACKAGEFILE)  README.md
 
 .PHONY: all install
 
+localInstall:
+	R -e 'devtools::install()'
+
 install:
 	R -e 'devtools::install_github("sherrillmix/$(NAME)")'
 
