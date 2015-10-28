@@ -1,4 +1,4 @@
-# LevenR --- Calculate Levenshtein distance between strings
+# LevenR: Calculate Levenshtein distance between strings
 
 [![Build Status](https://travis-ci.org/sherrillmix/levenR.svg?branch=master)](https://travis-ci.org/sherrillmix/levenR)
 [![codecov.io](https://codecov.io/github/sherrillmix/levenR/coverage.svg?branch=master)](https://codecov.io/github/sherrillmix/levenR?branch=master)
@@ -96,7 +96,7 @@ system.time(leven(seqs))
 
 ```
 ##    user  system elapsed 
-##   0.559   0.097   0.650
+##   0.525   0.138   0.660
 ```
 
 ```r
@@ -105,7 +105,7 @@ system.time(leven(seqs, nThreads = 4))
 
 ```
 ##    user  system elapsed 
-##   0.159   0.000   0.051
+##   0.159   0.001   0.073
 ```
 
 

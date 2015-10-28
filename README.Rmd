@@ -1,4 +1,4 @@
-# LevenR --- Calculate Levenshtein distance between strings
+# LevenR: Calculate Levenshtein distance between strings
 
 [![Build Status](https://travis-ci.org/sherrillmix/levenR.svg?branch=master)](https://travis-ci.org/sherrillmix/levenR)
 [![codecov.io](https://codecov.io/github/sherrillmix/levenR/coverage.svg?branch=master)](https://codecov.io/github/sherrillmix/levenR?branch=master)
