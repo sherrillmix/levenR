@@ -183,7 +183,7 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 #' @param string1 A single string or vector of strings
 #' @param string2 Another single string or vector of strings
 #' @param homoLimit deletions or insertions in homopolymers > homoLimit cost 0
-#' @param debug Output various debugging information
+# @param debug Output various debugging information #rprintf doesn't work from threads so just disable
 #' @param prepend 1 or 2 for ends-free on front of string 1 or 2
 #' @param append 1 or 2 for ends-free on back of string 1 or 2
 #' @param align Should an alignment be calculated
@@ -193,7 +193,8 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 #" @export
-levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,append=NULL,revComp=FALSE,align=FALSE,nThreads=1) {
+levenAll <- function(string1, string2,homoLimit=0,prepend=NULL,append=NULL,revComp=FALSE,align=FALSE,nThreads=1) {
+  debug<-FALSE #rprintf doesn't work from threads so just set to FALSE
 	if(is.null(string1)||is.null(string2))stop(simpleError('Null vectors received for alignment'))
 	if(is.null(prepend))prepend<-c(FALSE,FALSE)
 	if(is.null(append))append<-c(FALSE,FALSE)
@@ -241,7 +242,7 @@ levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,appen
 #' @param oneToOne compare strings1[1] to strings2[1], strings1[2] to strings2[2],... (both vectors must be same length)
 #' @param homoLimit deletions or insertions in homopolymers > homoLimit cost 0
 #' @param vocal Integer to display a status message every vocal iterations
-#' @param debug If TRUE display various debugging information
+# @param debug If TRUE display various debugging information #rprintf doesnt work from threads so just remove debug
 #' @param prepend 1 or 2 for ends-free on front of string 1 or 2
 #' @param append 1 or 2 for ends-free on back of string 1 or 2
 #' @param substring1 ends-free for strings1
@@ -251,7 +252,8 @@ levenAll <- function(string1, string2,homoLimit=0,debug=FALSE,prepend=NULL,appen
 #' @references \url{http://en.wikipedia.org/wiki/Levenshtein_distance}
 #' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
 #" @export
-leven<-function(strings1,strings2=NULL,oneToOne=FALSE,homoLimit=0,vocal=0,debug=FALSE,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,nThreads=1){
+leven<-function(strings1,strings2=NULL,oneToOne=FALSE,homoLimit=0,vocal=0,prepend=NULL,append=NULL,substring1=FALSE,substring2=FALSE,nThreads=1){
+  debug<-FALSE #rprintf doesn't work from threads so just set to FALSE
 	if(nThreads>1&oneToOne)warnings('oneToOne not currently compatible with parallel processing')
 	if(any(!prepend %in% 1:2)|any(!append %in% 1:2))stop(simpleError('Specify prepend and append with 1 or 2'))
 	if(is.null(strings2)){
@@ -273,18 +275,18 @@ leven<-function(strings1,strings2=NULL,oneToOne=FALSE,homoLimit=0,vocal=0,debug=
 		distMat<-rep(NA,nStrings1)
 		for(i in 1:nStrings1){
 			if(vocal[1]>0&i%%vocal[1]==0)message("Working on string ",i)
-			distMat[i]<-levenAll(strings1[i],strings2[i],homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)
+			distMat[i]<-levenAll(strings1[i],strings2[i],homoLimit=homoLimit,append=append,prepend=prepend)
 		}
 	}else{
 		distMat<-matrix(NA,nrow=nStrings1,ncol=nStrings2)
 		if(nThreads==1){
 			for(i in 1:nStrings1){
 				for(j in 1:nStrings2){
-					distMat[i,j]<-levenAll(strings1[i],strings2[j],homoLimit=homoLimit,debug=debug,append=append,prepend=prepend)
+					distMat[i,j]<-levenAll(strings1[i],strings2[j],homoLimit=homoLimit,append=append,prepend=prepend)
 				}
 			}
 		}else{
-			distMat<-levenAll(strings1,strings2,homoLimit=homoLimit,debug=debug,append=append,prepend=prepend,nThreads=nThreads)
+			distMat<-levenAll(strings1,strings2,homoLimit=homoLimit,append=append,prepend=prepend,nThreads=nThreads)
 		}
 	}
 	return(distMat)

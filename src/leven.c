@@ -13,7 +13,9 @@
 	#include <R.h>
 	#define errorMessage(A,B) error(A)
 	#define warningMessage(A) warning(A)
-	#define printMessage(...) Rprintf(__VA_ARGS__)
+	//printf generates errors if called from threads. just suppress debug
+	//#define printMessage(...) Rprintf(__VA_ARGS__)
+	#define printMessage(...)
 #else
 	#define errorMessage(A,B) printf(A);exit(B)
 	#define warningMessage(A) printf(A)

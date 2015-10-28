@@ -5,8 +5,8 @@
 \title{Find Levenshtein distance between many strings}
 \usage{
 leven(strings1, strings2 = NULL, oneToOne = FALSE, homoLimit = 0,
-  vocal = 0, debug = FALSE, prepend = NULL, append = NULL,
-  substring1 = FALSE, substring2 = FALSE, nThreads = 1)
+  vocal = 0, prepend = NULL, append = NULL, substring1 = FALSE,
+  substring2 = FALSE, nThreads = 1)
 }
 \arguments{
 \item{strings1}{vector of strings to compare to strings2 (or as strings1 x strings1 if strings2==NULL)}
@@ -18,8 +18,6 @@ leven(strings1, strings2 = NULL, oneToOne = FALSE, homoLimit = 0,
 \item{homoLimit}{deletions or insertions in homopolymers > homoLimit cost 0}
 
 \item{vocal}{Integer to display a status message every vocal iterations}
-
-\item{debug}{If TRUE display various debugging information}
 
 \item{prepend}{1 or 2 for ends-free on front of string 1 or 2}
 

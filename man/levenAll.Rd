@@ -4,8 +4,8 @@
 \alias{levenAll}
 \title{Wrapper for .C Levenshtein function}
 \usage{
-levenAll(string1, string2, homoLimit = 0, debug = FALSE, prepend = NULL,
-  append = NULL, revComp = FALSE, align = FALSE, nThreads = 1)
+levenAll(string1, string2, homoLimit = 0, prepend = NULL, append = NULL,
+  revComp = FALSE, align = FALSE, nThreads = 1)
 }
 \arguments{
 \item{string1}{A single string or vector of strings}
@@ -13,8 +13,6 @@ levenAll(string1, string2, homoLimit = 0, debug = FALSE, prepend = NULL,
 \item{string2}{Another single string or vector of strings}
 
 \item{homoLimit}{deletions or insertions in homopolymers > homoLimit cost 0}
-
-\item{debug}{Output various debugging information}
 
 \item{prepend}{1 or 2 for ends-free on front of string 1 or 2}
 
