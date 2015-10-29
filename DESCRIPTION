@@ -1,7 +1,7 @@
 Package: levenR
 Maintainer: Scott Sherrill-Mix <R@sherrillmix.com>
 License: GPL-2
-Title: Simple Levenshtein alignment and distance calculation
+Title: Simple Levenshtein Alignment and Distance Calculation
 Type: Package
 LazyLoad: yes
 Author: Scott Sherrill-Mix
