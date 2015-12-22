@@ -41,3 +41,4 @@ if(any(multiMismatch(c('TT','AA'),'TTAAGAA',drop=FALSE,findAll=TRUE)[,'pos']!=c(
 
 #don't call directly from R so test it directly
 if(.C('levenAll',as.integer(1),"AATTAA","GAATTAAG",as.integer(0),as.integer(c(0,0)),as.integer(c(0,0)),as.integer(1),as.integer(0),"AAAAAAAAAAAAAAAA","AAAAAAAAAAAA",PACKAGE='levenR')[[1]]!=2)stop(simpleError('Debug messes things up'))
+if(.C('levenAll',as.integer(1),"AATTAA","GAATTAAG",as.integer(0),as.integer(c(0,0)),as.integer(c(0,0)),as.integer(1),as.integer(1),"AAAAAAAAAAAAAAAA","AAAAAAAAAAAA",PACKAGE='levenR')[[9]]!="-AATTAA-")stop(simpleError('Debug messes things up'))
