@@ -5,7 +5,7 @@
 
 ## Introduction
 
-`violinPointR` provides a few functions for simple Levenshtein alignment and distance calculation with multiple threads, ends-free and reduced homopolymer gap costs.
+`levenR` provides a few functions for simple Levenshtein alignment and distance calculation with multiple threads, ends-free and reduced homopolymer gap costs.
 
 ## Installation
 To install directly from github, use the [<code>devtools</code>](https://github.com/hadley/devtools) library and run:
@@ -96,7 +96,7 @@ system.time(leven(seqs))
 
 ```
 ##    user  system elapsed 
-##   0.525   0.138   0.660
+##   0.556   0.100   0.637
 ```
 
 ```r
@@ -105,7 +105,7 @@ system.time(leven(seqs, nThreads = 4))
 
 ```
 ##    user  system elapsed 
-##   0.159   0.001   0.073
+##   0.158   0.000   0.051
 ```
 
 
