@@ -127,7 +127,7 @@ combineAligns<-function(refs,aligns,starts=NULL){
 	out<-rep('',length(aligns))
 
 	readLengths<-nchar(refs)
-	maxOutLength<-min(sum(nchar(gsub('[^-]','',refs,perl=TRUE)))+nchar(gsub('[-.]+','',refs[1])),4*max(readLengths))
+	maxOutLength<-4*max(readLengths)
 	out<-rep(paste(rep('Z',maxOutLength),collapse=''),nReads)
 
 	ans<-.C('combineAligns',as.character(aligns),as.character(refs),as.character(out),as.integer(nReads),as.integer(readLengths),as.integer(maxOutLength),PACKAGE='levenR')[[3]]
@@ -164,8 +164,8 @@ levenAlign<-function(strings,ref,homoLimit=0,prepend=NULL,append=NULL,substring1
 	aligns<-c(ref,sapply(aligns,'[[',1))
 	out<-combineAligns(refs,aligns)
 	if(trimOuterGaps){
-		refRange<-range(gregexpr('[^-]',out[1])[[1]])
-		nonGaps<-gregexpr('[^-]',out[-1])
+		refRange<-range(gregexpr('[^-.]',out[1])[[1]])
+		nonGaps<-gregexpr('[^-.]',out[-1])
 		alignRange<-c(min(sapply(nonGaps,min)),max(sapply(nonGaps,max)))
 		trimRange<-c(max(refRange[1],alignRange[1]),min(refRange[2],alignRange[2]))
 		out<-substring(out,trimRange[1],trimRange[2])

@@ -34,7 +34,7 @@ void combineAligns(char **queries, char **refs, char **out, int *nReadsIn, int *
 	//get ready
 	for(ii=0;ii<nReads;ii++){
 		//find max
-		if(maxRemaining<readLengths[ii])maxRemaining=readLengths[ii];
+		if(readLengths[ii]>maxRemaining)maxRemaining=readLengths[ii];
 		//point pointers to start of read
 		readIndexes[ii]=0;
 	}
@@ -49,7 +49,7 @@ void combineAligns(char **queries, char **refs, char **out, int *nReadsIn, int *
 		}
 		for(ii=0;ii<nReads;ii++){
 			if(readIndexes[ii]>=readLengths[ii]){
-				thisBase='-';
+				thisBase='.';
 			}else if(!anyGap || refs[ii][readIndexes[ii]]=='-'){
 				thisBase=queries[ii][readIndexes[ii]];
 				readIndexes[ii]++;

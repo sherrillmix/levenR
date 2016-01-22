@@ -13,12 +13,14 @@ if(any(leven(c('AAAA','AA'),'AAA')!=1))stop(simpleError('Multiple string1 do not
 if(any(leven('AAA',c('AAAA','AA'))!=1))stop(simpleError('Multiple string2 do not produce expected'))
 if(tryCatch(leven(NULL,'AAA'),error=function(x)"Caught error")!='Caught error')stop(simpleError('Did not catch NULL input'))
 if(any(unlist(levenAlign('AA','AA'))!=c('AA','AA')))stop(simpleError('Aligning AA and AA does not produce AA and AA'))
-if(any(unlist(levenAlign('AAT','AA'))!=c('AA-','AAT')))stop(simpleError('Aligning AAT and AA does not produce AAT and AA-'))
+if(any(unlist(levenAlign('AAT','AA'))!=c('AA.','AAT')))stop(simpleError('Aligning AAT and AA does not produce AAT and AA-'))
 if(any(unlist(levenAlign('AATC','AAC'))!=c('AA-C','AATC')))stop(simpleError('Aligning AATC and AAC does not produce AATC and AA-C'))
 if(any(unlist(levenAlign('AAC','AATC'))!=c('AATC','AA-C')))stop(simpleError('Aligning AAC and AATC does not produce AA-C and AATC'))
 if(any(unlist(levenAlign('TAAAAAATC','AAATC'))!=c('-AAA---TC','TAAAAAATC')))stop(simpleError('Aligning TAAAAAATC and AAATC does not produce -AAA---TC and TAAAAAATC'))
 if(all(unlist(levenAlign(c('TAA','AAT'),'AA'))!=c('-AA-','TAA-','-AAT')))stop(simpleError('Aligning TAA,AAT and AA does not produce TAA-,-AAT and -AA-'))
-if(any(combineAligns(c('AAT','AA','T','AAT'),c('AAT','AT','T','--T'),c(1:3,1))!=c('AAT','.AT','..T','--T')))stop(simpleError('Combining alignments with starts does produce expected'))
+if(any(combineAligns(c('AAT','AA','T','AAT'),c('AAT','AT','T','--T'),c(1:3,1))!=c('AAT','.AT','..T','--T')))stop(simpleError('Combining alignments with starts does not produce expected'))
+if(any(combineAligns(c('G'),c('C'),2)!=c('.C')))stop(simpleError('Combining alignments with starts does not produce expected'))
+if(any(combineAligns(c('AA','TTT','CC'),c('AA','T-T','CC'),c(1,4,6))!=c('AA.....','...T-T.','.....CC')))stop(simpleError('Combining alignments with starts does not produce expected'))
 if(any(unlist(levenAlign('AAAAACTTT','AAC',trimOuterGaps=TRUE,substring1=TRUE))!=c('AAC','AAC')))stop(simpleError('Trim outer gaps and substrings incorrect'))
 if(any(unlist(levenAlign('AAC','AAAAACTTT',trimOuterGaps=TRUE,substring2=TRUE))!=c('AAC','AAC')))stop(simpleError('Trim outer gaps and substrings incorrect'))
 if(leven('AAA')!=0)stop(simpleError('leven on self did not return 0'))
@@ -42,3 +44,5 @@ if(any(multiMismatch(c('TT','AA'),'TTAAGAA',drop=FALSE,findAll=TRUE)[,'pos']!=c(
 #don't call directly from R so test it directly
 if(.C('levenAll',as.integer(1),"AATTAA","GAATTAAG",as.integer(0),as.integer(c(0,0)),as.integer(c(0,0)),as.integer(1),as.integer(0),"AAAAAAAAAAAAAAAA","AAAAAAAAAAAA",PACKAGE='levenR')[[1]]!=2)stop(simpleError('Debug messes things up'))
 if(.C('levenAll',as.integer(1),"AATTAA","GAATTAAG",as.integer(0),as.integer(c(0,0)),as.integer(c(0,0)),as.integer(1),as.integer(1),"AAAAAAAAAAAAAAAA","AAAAAAAAAAAA",PACKAGE='levenR')[[9]]!="-AATTAA-")stop(simpleError('Debug messes things up'))
+
+
