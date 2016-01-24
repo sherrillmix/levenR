@@ -127,7 +127,7 @@ combineAligns<-function(refs,aligns,starts=NULL){
 	out<-rep('',length(aligns))
 
 	readLengths<-nchar(refs)
-	maxOutLength<-4*max(readLengths)
+	maxOutLength<-8*max(readLengths)
 	out<-rep(paste(rep('Z',maxOutLength),collapse=''),nReads)
 
 	ans<-.C('combineAligns',as.character(aligns),as.character(refs),as.character(out),as.integer(nReads),as.integer(readLengths),as.integer(maxOutLength),PACKAGE='levenR')[[3]]
