@@ -391,7 +391,17 @@ void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLi
 	if(*debug)printMessage("Starting %d threads",nThreads);
 	for(ii=0;ii<nThreads;ii++){
 		args[ii]=(struct levenArgs *)malloc(sizeof(struct levenArgs));
-		args[ii]->answer=answer; args[ii]->s1=s1;args[ii]->s2=s2;args[ii]->homoLimit=homoLimit;args[ii]->prepend=prepend;args[ii]->append=append;args[ii]->debug=debug;args[ii]->isAlign=isAlign;args[ii]->align1=align1;args[ii]->align2=align2;args[ii]->nStrings=nStrings;
+		args[ii]->answer=answer;
+    args[ii]->s1=s1;
+    args[ii]->s2=s2;
+    args[ii]->homoLimit=homoLimit;
+    args[ii]->prepend=prepend;
+    args[ii]->append=appendj
+    args[ii]->debug=debug;
+    args[ii]->isAlign=isAlign;
+    args[ii]->align1=align1;
+    args[ii]->align2=align2;
+    args[ii]->nStrings=nStrings;
 		
 		stepSize=(nStrings[0]-nextI)/(nThreads-ii); //integer division
 		args[ii]->iRange[0]=nextI;
