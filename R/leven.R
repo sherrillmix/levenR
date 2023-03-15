@@ -349,6 +349,5 @@ hamming<-function(strings1,strings2=NULL,oneToOne=FALSE,cutoff=99999,vocal=0){
 	if(any(is.na(string1))||any(is.na(string2)))stop(simpleError('NA string in .hamming'))
   if(nchar(string1)!=nchar(string2))stop('String lengths do not match in .hamming')
 	ans<-.C('hamming',as.integer(c(-99)),as.character(string1),as.character(string2),as.integer(nchar(string1)),as.integer(cutoff),PACKAGE='levenR')
-  print(ans)
   return(ans[[1]][1])
 }
