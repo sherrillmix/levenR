@@ -396,7 +396,7 @@ void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLi
     args[ii]->s2=s2;
     args[ii]->homoLimit=homoLimit;
     args[ii]->prepend=prepend;
-    args[ii]->append=appendj
+    args[ii]->append=append;
     args[ii]->debug=debug;
     args[ii]->isAlign=isAlign;
     args[ii]->align1=align1;
@@ -421,4 +421,15 @@ void parallelLeven(int *answer, char **s1, char **s2, int *nStrings, int *homoLi
 	free(args);
 	free(threads);
 }
+
+int hamming(int *ans, char **s1, char **s2, int *length, int *cutoff) {
+	ans[0]=0;
+	for(unsigned int ii = 0; ii < length[0]; ii++){
+		if(s1[0][ii]!=s2[0][ii]) ans[0]++;
+    //printf("%d%c%c\n",ii,s1[0][ii],s2[0][ii]);
+		if(ans[0] >= cutoff[0])return(ans[0]);
+	}
+  return(ans[0]);
+}
+
 

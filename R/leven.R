@@ -292,4 +292,63 @@ leven<-function(strings1,strings2=NULL,oneToOne=FALSE,homoLimit=0,vocal=0,prepen
 	return(distMat)
 }
 
+#' Find hamming distance between many strings
+#' @param strings1 vector of strings to compare to strings2 (or as strings1 x strings1 if strings2==NULL)
+#' @param strings2 vector of strings to compare to strings1 or NULL (either strings1 or strings2 should be 1 or should have equal lengths)
+#' @param oneToOne compare strings1[1] to strings2[1], strings1[2] to strings2[2],... (both vectors must be same length)
+#' @param cutoff an integer giving a distance to stop checking beyond and instead return the cutoff value
+#' @param vocal Integer to display a status message every vocal iterations
+#' @return Hamming distance matrix
+#' @references \url{http://en.wikipedia.org/wiki/Hamming_distance}
+#' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
+#" @export
+hamming<-function(strings1,strings2=NULL,oneToOne=FALSE,cutoff=99999,vocal=0){
+	if(is.null(strings2)){
+		strings2<-strings1
+	}
+	nStrings1=length(strings1)
+	nStrings2=length(strings2)
+	if(oneToOne){
+		if(nStrings1!=nStrings2)stop(simpleError('Length of strings1 and strings2 not equal for 1 to 1 dists'))
+		nStrings2<-1
+	}
+	if(oneToOne){
+		distMat<-rep(NA,nStrings1)
+		for(i in 1:nStrings1){
+			if(vocal[1]>0&i%%vocal[1]==0)message("Working on string ",i)
+			distMat[i]<-.hamming(strings1[i],strings2[i],cutoff=cutoff)
+		}
+	}else{
+		distMat<-matrix(NA,nrow=nStrings1,ncol=nStrings2)
+    for(i in 1:nStrings1){
+			if(vocal[1]>0&i%%vocal[1]==0)message("Working on string ",i)
+      for(j in 1:nStrings2){
+        distMat[i,j]<-.hamming(strings1[i],strings2[j],cutoff=cutoff)
+      }
+    }
+	}
+	return(distMat)
+}
 
+#' Wrapper for .C Hamming function
+#'
+#' Align and calculate distance betweeen two strings based on Hamming distance
+#'
+#' @param string1 A single string or vector of strings
+#' @param string2 Another single string or vector of strings
+#' @param cutoff an integer giving a distance to stop checking beyond and instead return the cutoff value
+#' @return the hamming distance between two strings
+#' @references \url{http://en.wikipedia.org/wiki/Hamming_distance}
+#' @author Scott Sherrill-Mix \email{R@@sherrillmix.com}
+#' @examples
+#' levenR:::.hamming('aazaazaaz','aayaayaay')
+#' levenR:::.hamming('aazaazaaz','aayaayaay',cutoff=2)
+#' levenR:::.hamming('ss','ss')
+.hamming <- function(string1, string2,cutoff=99999){
+	if(is.null(string1)||is.null(string2))stop(simpleError('Null vectors received for alignment'))
+	if(any(is.na(string1))||any(is.na(string2)))stop(simpleError('NA string in .hamming'))
+  if(nchar(string1)!=nchar(string2))stop('String lengths do not match in .hamming')
+	ans<-.C('hamming',as.integer(c(-99)),as.character(string1),as.character(string2),as.integer(nchar(string1)),as.integer(cutoff),PACKAGE='levenR')
+  print(ans)
+  return(ans[[1]][1])
+}

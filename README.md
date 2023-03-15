@@ -96,7 +96,7 @@ system.time(leven(seqs))
 
 ```
 ##    user  system elapsed 
-##   0.556   0.100   0.637
+##   0.685   0.138   0.819
 ```
 
 ```r
@@ -105,7 +105,7 @@ system.time(leven(seqs, nThreads = 4))
 
 ```
 ##    user  system elapsed 
-##   0.158   0.000   0.051
+##   0.196   0.001   0.056
 ```
 
 
