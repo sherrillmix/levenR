@@ -31,6 +31,17 @@ if(any(leven(c('AAAA','ATAA','AAATA'),c('AAA','ATA','ACA'),oneToOne=TRUE,substri
 if(any(leven(c('AAAA','ATAA','AAATA','XXX'))!=leven(c('AAAA','ATAA','AAATA','XXX'),nThreads=3)))stop(simpleError('Multithreading produces incorrect results'))
 if(any(leven(c('AAAAT','AAAT','AAATA','AATTTTT','AT','XXX'),'AAAAAAT',homoLimit=3)!=c(0,0,1,2,2,4)))stop(simpleError('Homopolymer errors not correct'))
 
+
+if(any(hamming(c('CCCC','CCCT','CCAT'),'AAAT')!=c(4,3,2)))stop(simpleError('Hamming distance not correct'))
+if(any(hamming(c('CCCC','CCCT','CCAT'),'AAAT',cutoff=3)!=c(3,3,2)))stop(simpleError('Hamming distance with cutoff not correct'))
+if(any(hamming(c('CCCC','CCCT','CCAT'),c('CCCC','CCAA','CAAT'),cutoff=3,oneToOne=TRUE)!=c(0,2,1)))stop(simpleError('One to one Hamming distance not correct'))
+if(any(hamming(c('CCCC','CCCT','CCAT'),c('CCCC','CCAA','CAAT'),cutoff=3)!=matrix(c(0,2,3,1,2,2,2,1,1),byrow=TRUE,nrow=3)))stop(simpleError('Multiple Hamming distance not correct'))
+tmp<-paste(sample(LETTERS,10000,TRUE),collapse='')
+if(any(hamming(tmp,tmp)!=0))stop(simpleError('Hamming distance on long sequence not correct'))
+if(any(hamming(sprintf('%sAAA%s',tmp,tmp),sprintf('%sBBB%s',tmp,tmp))!=3))stop(simpleError('Hamming distance on long sequence not correct'))
+if(any(hamming(sprintf('%sAAA%s',tmp,tmp),sprintf('%sBBB%s',tmp,tmp),cutoff=1)!=1))stop(simpleError('Hamming distance on long sequence not correct'))
+#hamming<-function(strings1,strings2=NULL,oneToOne=FALSE,cutoff=99999,vocal=0){
+
 if(bestMismatch('AA','AAG')!=0)stop(simpleError('bestMismatch incorrect'))
 if(bestMismatch('TT','AAG')!=2)stop(simpleError('bestMismatch incorrect'))
 if(any(bestMismatch('AA','AAG',pos=TRUE)!=c(0,1)))stop(simpleError('bestMismatch position finding incorrect'))
@@ -45,4 +56,7 @@ if(any(multiMismatch(c('TT','AA'),'TTAAGAA',drop=FALSE,findAll=TRUE)[,'pos']!=c(
 if(.C('levenAll',as.integer(1),"AATTAA","GAATTAAG",as.integer(0),as.integer(c(0,0)),as.integer(c(0,0)),as.integer(1),as.integer(0),"AAAAAAAAAAAAAAAA","AAAAAAAAAAAA",PACKAGE='levenR')[[1]]!=2)stop(simpleError('Debug messes things up'))
 if(.C('levenAll',as.integer(1),"AATTAA","GAATTAAG",as.integer(0),as.integer(c(0,0)),as.integer(c(0,0)),as.integer(1),as.integer(1),"AAAAAAAAAAAAAAAA","AAAAAAAAAAAA",PACKAGE='levenR')[[9]]!="-AATTAA-")stop(simpleError('Debug messes things up'))
 
+
+if(.C('hamming',as.integer(-99),"AATTAA","AATTAA",as.integer(6),as.integer(2),PACKAGE='levenR')[[1]]!=0)stop(simpleError('Incorrect hamming'))
+if(.C('hamming',as.integer(-99),"AATTAA","AAZZAA",as.integer(6),as.integer(2),PACKAGE='levenR')[[1]]!=2)stop(simpleError('Incorrect hamming'))
 
