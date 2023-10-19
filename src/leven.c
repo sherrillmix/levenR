@@ -7,6 +7,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <limits.h>
 
 #define forR 1
 #if forR==1
